@@ -1,0 +1,27 @@
+#adCountDown {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.97);
+    z-index: 101;
+    text-align: center;
+    display: none;
+    padding-top: 25vh;
+}
+
+#adCountDown h5,
+#adCountDown h3 {
+    color: #fff;
+    font-family: 'Play', sans-serif;
+}
+
+#adCountDown h5 {
+    margin-top: 10%;
+    font-size: 25px;
+}
+
+#adCountDown h3 {
+    font-size: 60px;
+}

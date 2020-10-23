@@ -1,0 +1,16 @@
+{
+    "/js/game.js": "/js/game.js",
+    "/css/game.css": "/css/game.css",
+    "/js/game.js.map": "/js/game.js.map",
+    "/css/game.css.map": "/css/game.css.map",
+    "/js/manifest.js": "/js/manifest.js",
+    "/js/manifest.js.map": "/js/manifest.js.map",
+    "/js/vendor.js": "/js/vendor.js",
+    "/js/vendor.js.map": "/js/vendor.js.map",
+    "/fonts/fontawesome-webfont.eot": "/fonts/fontawesome-webfont.eot",
+    "/fonts/fontawesome-webfont.svg": "/fonts/fontawesome-webfont.svg",
+    "/fonts/fontawesome-webfont.ttf": "/fonts/fontawesome-webfont.ttf",
+    "/fonts/fontawesome-webfont.woff": "/fonts/fontawesome-webfont.woff",
+    "/fonts/fontawesome-webfont.woff2": "/fonts/fontawesome-webfont.woff2",
+    "/fonts/FontAwesome.otf": "/fonts/FontAwesome.otf"
+}
