@@ -1,8 +1,9 @@
 class Socket {
-    constructor() {
-        const conn = new WebSocket('ws://localhost:8080/comm');
+    constructor(players) {
+        const url = `ws://192.168.0.105:8080/comm?playerId=${players.player.id}&opponentId=${players.opponent.id}`;
+        const conn = new WebSocket(url);
         conn.onopen = function(e) {
-            console.log('Connection established!');
+            console.log(`Connection established to ${url}`);
         };
         // conn.onmessage = (e) => {
         //     console.log(e.data);
@@ -11,8 +12,9 @@ class Socket {
     }
 
     send(msg) {
+        if (this.conn.readyState === WebSocket.CLOSED) return;
         return this.conn.send(msg);
     }
 }
 
-export default new Socket();
+export default Socket;

@@ -61,7 +61,7 @@ mix.sass('src/sass/game.scss', 'css/game.css').options({
 });
 
 mix.browserSync({
-    proxy: 'https://localhost/airplane',
+    proxy: 'http://localhost/airplane',
     files: ['assets/css/*.*', 'assets/js/*.*', 'index.html'],
 });
 

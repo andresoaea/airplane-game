@@ -9,10 +9,9 @@ import Phaser from 'phaser';
 window.axios = require('axios');
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-window.SOCKET_URL = 'ws://localhost:8080/play';
-
+import LoadScene from './scenes/LoadScene';
 import MainScene from './scenes/MainScene';
-const mainScene = new MainScene();
+import SetPlaneScene from './scenes/SetPlaneScene';
 
 let config = {
     type: Phaser.AUTO,
@@ -32,6 +31,8 @@ let config = {
 };
 
 let game = new Phaser.Game(config);
-game.scene.add('MainScene', mainScene);
-game.scene.start('MainScene');
+game.scene.add('LoadScene', new LoadScene());
+game.scene.add('MainScene', new MainScene());
+game.scene.add('SetPlaneScene', new SetPlaneScene());
+game.scene.start('LoadScene');
 window.game = game;

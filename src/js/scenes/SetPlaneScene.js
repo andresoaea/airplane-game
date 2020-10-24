@@ -1,10 +1,10 @@
-import Socket from '../Socket';
 import Players from '../components/Players';
+import Plane from '../components/Plane';
 
-class MainScene extends Phaser.Scene {
+class SetPlaneScene extends Phaser.Scene {
     constructor() {
         super({
-            key: 'MainScene',
+            key: 'SetPlaneScene',
             physics: {
                 arcade: {
                     //debug: true,
@@ -12,7 +12,7 @@ class MainScene extends Phaser.Scene {
             },
         });
 
-        this.cells = {};
+        this.cells = [];
     }
 
     init() {
@@ -25,39 +25,26 @@ class MainScene extends Phaser.Scene {
         // Setup players
         this.players = new Players();
 
-        this.socket = new Socket(this.players);
+        // this.socket = new Socket(this.players);
 
-        this.socket.conn.onmessage = (e) => {
-            console.log(e.data);
-            const msg = JSON.parse(e.data);
-
-            if (msg.opponentDisconnected) {
-                console.log('opponent disconnected');
-                this.scene.restart();
-            }
-
-            const cellId = msg.cellClicked;
-            if (!cellId) return;
-
-            const graphics = this.add.graphics({
-                fillStyle: { color: 0x0000ff },
-            });
-
-            graphics.fillRectShape(this.cells[cellId.replace('p', 'o')].rect);
-        };
-
-        const x = 40;
+        const x = 120;
         const y = 80;
 
         this.drawPlayerMap(x, y);
-        this.drawPlayerMap(440, y, 'opponent');
+
+        //this.plane = new Plane(this);
+        let plane = new Plane({
+            scene: this,
+            x: game.config.width / 2 + 200,
+            y: 140,
+        });
 
         //debug
-        window.Socket = Socket;
-        window.MainScene = this;
+        // window.Socket = Socket;
+        window.SetPlaneScene = this;
     }
 
-    drawPlayerMap(x, y, type = null) {
+    drawPlayerMap(x, y) {
         const sqareWidth = 40;
         const cellsNum = 8;
 
@@ -70,47 +57,36 @@ class MainScene extends Phaser.Scene {
                     y + i * sqareWidth,
                     sqareWidth,
                     i,
-                    j,
-                    type
+                    j
                 );
             }
         }
+
+        this.drawBorder(x, y, sqareWidth, cellsNum);
+    }
+
+    drawBorder(x, y, sqareWidth, cellsNum) {
+        let width = sqareWidth * cellsNum;
+        let rect = new Phaser.Geom.Rectangle(x, y, width, width);
+        //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+        let graphics = this.add.graphics({
+            lineStyle: { width: 3, color: 0x000000 },
+        });
+        graphics.strokeRectShape(rect);
+
+        this.dropZoneRect = rect;
     }
 
     drawRect(x, y, sqareWidth, i, j, type) {
         let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-        var graphics = this.add.graphics({
-            lineStyle: { width: 1, color: 0x0000aa },
+        let graphics = this.add.graphics({
+            lineStyle: { width: 1, color: 0x000000 },
         });
         graphics.strokeRectShape(rect);
 
-        graphics.setInteractive(
-            new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth),
-            Phaser.Geom.Rectangle.Contains
-        );
-
-        const owner = type === 'opponent' ? 'p' : 'o';
-
-        const id = `${owner}${j + 1}${i + 1}`;
+        const id = `${j + 1}${i + 1}`;
         this.cells[id] = { graphics, rect };
-        // graphics.setData('id', id);
-        graphics.on('pointerdown', () => {
-            if (type !== 'opponent') return;
-
-            this.socket.send(
-                JSON.stringify({
-                    cellClicked: id,
-                })
-            );
-
-            // console.log(graphics.getData('id'));
-            graphics = this.add.graphics({
-                fillStyle: { color: 0x0000ff },
-            });
-
-            graphics.fillRectShape(rect);
-        });
     }
 
     drawSceneBackground() {
@@ -144,4 +120,4 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-export default MainScene;
+export default SetPlaneScene;
