@@ -88,7 +88,7 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
 
     _classCallCheck(this, Plane);
 
-    _this = _super.call(this, config.scene, config.x, config.y, 'plane-1');
+    _this = _super.call(this, config.scene, config.x, config.y, config.planeName);
     config.scene.add.existing(_assertThisInitialized(_this));
     _this.scene = config.scene;
 
@@ -100,25 +100,51 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
     _this.scene.input.on('pointerdown', _this.startDrag, _assertThisInitialized(_this)); // Other variables
 
 
+    _this.planeName = config.planeName;
+    _this.stablePos = [];
+    _this.planeCells = [];
     _this.isInDropZone = false;
+    _this.firstClickTime = 0; // this.lastPos = { x: 0, y: 0 };
+    // this.lastAngle = 0;
+
     return _this;
   }
 
   _createClass(Plane, [{
     key: "startDrag",
     value: function startDrag(pointer, targets) {
+      if (targets[0] !== this) return;
+      this.dragObj = targets[0]; // this.dragObj.depth++;
+      // this.scene.planes.map((plane) => {
+      //     return plane.instance.depth--;
+      // });
+      // if (this.scene.planes.length === 2) {
+      //     this.scene.planes.find((plane) => {
+      //         return plane.instance === this;
+      //     });
+      // }
+      //  console.log(this.dragObj.depth);
+      // console.log(this.planeName);
+
+      this.checkDoubleTap();
       this.scene.input.off('pointerdown', this.startDrag, this);
-      this.dragObj = targets[0];
       this.scene.input.on('pointermove', this.doDrag, this);
       this.scene.input.on('pointerup', this.stopDrag, this);
+
+      if (typeof this.dragObj !== 'undefined') {
+        this.pointerDiffY = pointer.y - this.dragObj.y;
+        this.pointerDiffX = pointer.x - this.dragObj.x;
+      }
     }
   }, {
     key: "doDrag",
-    value: function doDrag(pointer) {
+    value: function doDrag(pointer, targets) {
+      if (targets[0] !== this) return;
+
       if (typeof this.dragObj !== 'undefined') {
         // Move
-        this.dragObj.x = pointer.x;
-        this.dragObj.y = pointer.y;
+        this.dragObj.x = pointer.x - this.pointerDiffX;
+        this.dragObj.y = pointer.y - this.pointerDiffY;
         var initialPos = this.dragObj.getData('initialPos'); // Scale
 
         if (pointer.x < initialPos.x) {
@@ -132,7 +158,8 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
     }
   }, {
     key: "stopDrag",
-    value: function stopDrag() {
+    value: function stopDrag(pointer, targets) {
+      if (targets[0] !== this) return;
       this.scene.input.on('pointerdown', this.startDrag, this);
       this.scene.input.off('pointermove', this.doDrag, this);
       this.scene.input.off('pointerup', this.stopDrag, this);
@@ -144,15 +171,21 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
 
       if (dragX > dropZone.x && dragX < dropZone.x + dropZone.width && dragY > dropZone.y && dragY < dropZone.y + dropZone.height) {
         // Inside drop zone
-        this.dragObj.setScale(1); // this.dragObj.x = dropZone.x + this.dragObj.width / 2;
-        // this.dragObj.y = dropZone.y + this.dragObj.height / 2;
-        // this.scene.cells.forEach((cell) => {
-        //     console.log(cell);
-        // });
+        this.dragObj.setScale(1); //console.log(this.lastAngle);
+        // if (
+        //     (this.x !== this.lastPos.x && this.y !== this.lastPos.y) ||
+        //     this.angle !== this.lastAngle
+        // ) {
 
         this.repositionToClosest('x');
-        this.repositionToClosest('y');
-        this.setPlanePositionInCells();
+        this.repositionToClosest('y'); // }
+        // this.lastPos = {
+        //     x: this.x,
+        //     y: this.y,
+        // };
+        // this.lastAngle = this.angle;
+
+        this.setPlaneCells();
         this.isInDropZone = true; //this.dragObj.x =
       } else {
         // Outside drop zone / Go back to initial position
@@ -170,10 +203,21 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
   }, {
     key: "repositionToClosest",
     value: function repositionToClosest(axis) {
-      var dropZone = this.getDropZone();
-      var cellsNum = 8;
+      var isVertical = this.angle === 90 || this.angle === -90;
 
-      for (var i = 0; i < cellsNum; i++) {
+      if (isVertical) {
+        this.repositionVertical(axis);
+      } else {
+        this.repositionHorizontal(axis);
+      } // console.log(isVertical);
+
+    }
+  }, {
+    key: "repositionHorizontal",
+    value: function repositionHorizontal(axis) {
+      var dropZone = this.getDropZone();
+
+      for (var i = 0; i < 8; i++) {
         if (i < 2) continue;
         var closest = i * 40;
         var relativeDistance = this.dragObj[axis] - dropZone[axis];
@@ -183,6 +227,7 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
         }
 
         if (relativeDistance - closest < 39) {
+          // Horizontal plane
           var newPos = closest + dropZone[axis] + (axis === 'x' ? 20 : 0);
 
           if (i > 5) {
@@ -192,6 +237,40 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
               this.dragObj.x = 5 * 40 + dropZone.x + 20;
             } else {
               this.dragObj.y = 5 * 40 + dropZone.x;
+            }
+          } else {
+            this.dragObj[axis] = newPos;
+          }
+
+          break;
+        }
+      }
+    }
+  }, {
+    key: "repositionVertical",
+    value: function repositionVertical(axis) {
+      var dropZone = this.getDropZone();
+
+      for (var i = 0; i < 9; i++) {
+        if (i < 2) continue;
+        var closest = i * 40;
+        var relativeDistance = this.dragObj[axis] - dropZone[axis];
+
+        if (axis === 'x') {
+          relativeDistance = relativeDistance + 20;
+        }
+
+        if (relativeDistance - closest < 39) {
+          // Horizontal plane
+          var newPos = closest + dropZone[axis] + (axis === 'y' ? 20 : 0);
+
+          if (i > 5) {
+            // this.dragObj[axis] =
+            //     5 * 40 + dropZone[axis] + (axis === 'x' ? 20 : 0);
+            if (axis === 'x') {
+              this.dragObj.x = 6 * 40 + dropZone.x; //console.log('aici 1');
+            } else {
+              this.dragObj.y = 5 * 40 + dropZone.x - 20; ///console.log('aici 2');
             }
           } else {
             this.dragObj[axis] = newPos;
@@ -217,15 +296,194 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
       };
     }
   }, {
-    key: "setPlanePositionInCells",
-    value: function setPlanePositionInCells() {
-      // let schema = [
-      //     [0, 0, 1, 0, 0],
-      //     [1, 1, 1, 1, 1],
-      //     [0, 0, 1, 0, 0],
-      //     [0, 1, 1, 1, 0],
+    key: "setPlaneCells",
+    value: function setPlaneCells() {
+      var _this2 = this;
+
+      var headCellId;
+      var planeData = this.getPlanePositionData();
+      var headPoint = planeData.headPoint; //console.log(planeData);
+
+      this.scene.cells.forEach(function (cell) {
+        if (cell.rect.centerX === headPoint.x && cell.rect.centerY === headPoint.y) {
+          headCellId = cell.id;
+        }
+      }); //console.log(headCellId);
+
+      var headCords = headCellId.split('').map(function (num) {
+        return parseInt(num);
+      });
+      headCords = {
+        x: headCords[0],
+        y: headCords[1]
+      }; // let planeCells = [
+      //     headCellId,
+      //     // `${headCords.y + 1}${headCords.x - 2}`,
+      //     // `${headCords.y + 1}${headCords.x - 1}`,
+      //     // `${headCords.x}${headCords.y + 1}`,
+      //     // `${headCords.x + 1}${headCords.y + 1}`,
+      //     // `${headCords.x + 2}${headCords.y + 1}`,
+      //     // `${headCords.x}${headCords.y + 2}`,
+      //     // `${headCords.y + 3}${headCords.x - 1}`,
+      //     // `${headCords.x}${headCords.y + 3}`,
+      //     // `${headCords.x + 1}${headCords.y + 3}`,
       // ];
-      console.log(this);
+
+      var planeCells = [];
+      var schema = planeData.schema;
+      var originX = headCords.x + planeData.diff.x;
+      var originY = headCords.y + planeData.diff.y;
+
+      for (var i = 0; i < schema.length; i++) {
+        var line = schema[i]; //console.log('line', i);
+
+        for (var j = 0; j < line.length; j++) {
+          var cellPlaceholder = line[j];
+
+          if (cellPlaceholder) {
+            planeCells.push("".concat(originX + j).concat(originY + i));
+          } //console.log(`${i + 1}${j + 1}`);
+
+        }
+      } //console.log(planeCells);
+
+
+      this.planeCells = planeCells;
+      var existingCurrentPlane = this.scene.planes.find(function (plane) {
+        return plane.name === _this2.planeName;
+      });
+
+      if (!existingCurrentPlane) {
+        this.scene.planes.push({
+          name: this.planeName,
+          cells: planeCells,
+          instance: this
+        });
+      }
+
+      var isOverlaping = this.checkOverlap();
+
+      if (!isOverlaping) {
+        this.stablePos.push({
+          x: this.x,
+          y: this.y
+        });
+
+        if (this.stablePos.length > 1) {
+          this.stablePos.shift();
+        }
+      } //localStorage.setItem('lastPlaceCells', planeCells.join(','));
+
+    }
+  }, {
+    key: "checkOverlap",
+    value: function checkOverlap() {
+      var _this3 = this;
+
+      if (this.scene.planes.length < 2) return false;
+      var overlap = false;
+      var firstPlaneCells = this.scene.planes[0].cells;
+      this.planeCells.forEach(function (cell) {
+        if (firstPlaneCells.includes(cell)) {
+          console.log('overlap');
+          _this3.x = _this3.stablePos[0].x;
+          _this3.y = _this3.stablePos[0].y;
+          overlap = true;
+        }
+      });
+      return overlap;
+    }
+  }, {
+    key: "getPlanePositionData",
+    value: function getPlanePositionData() {
+      var schema;
+      var headPoint;
+      var diff; // Compute start point difference
+      // It is distance in cells from plane head
+      // to plane margin (top/left 0)
+
+      switch (this.angle) {
+        case 90:
+          headPoint = {
+            x: this.x + this.height / 2 - this.scene.cellSize / 2,
+            y: this.y
+          };
+          schema = [[0, 0, 1, 0], [1, 0, 1, 0], [1, 1, 1, 1], [1, 0, 1, 0], [0, 0, 1, 0]];
+          diff = {
+            x: -3,
+            y: -2
+          };
+          break;
+
+        case -180:
+          headPoint = {
+            x: this.x,
+            y: this.y + this.height / 2 - this.scene.cellSize / 2
+          };
+          schema = [[0, 1, 1, 1, 0], [0, 0, 1, 0, 0], [1, 1, 1, 1, 1], [0, 0, 1, 0, 0]];
+          diff = {
+            x: -2,
+            y: -3
+          };
+          break;
+
+        case -90:
+          headPoint = {
+            x: this.x - this.height / 2 + this.scene.cellSize / 2,
+            y: this.y
+          };
+          schema = [[0, 1, 0, 0], [0, 1, 0, 1], [1, 1, 1, 1], [0, 1, 0, 1], [0, 1, 0, 0]];
+          diff = {
+            x: 0,
+            y: -2
+          };
+          break;
+
+        default:
+          headPoint = {
+            x: this.x,
+            y: this.y - this.height / 2 + this.scene.cellSize / 2
+          };
+          schema = [[0, 0, 1, 0, 0], [1, 1, 1, 1, 1], [0, 0, 1, 0, 0], [0, 1, 1, 1, 0]];
+          diff = {
+            x: -2,
+            y: 0
+          };
+      }
+
+      return {
+        schema: schema,
+        headPoint: headPoint,
+        diff: diff
+      };
+    }
+  }, {
+    key: "checkDoubleTap",
+    value: function checkDoubleTap() {
+      if (typeof this.dragObj === 'undefined') return;
+
+      if (this.firstClickTime == 0) {
+        this.firstClickTime = this.getTime();
+        return;
+      }
+
+      var elapsed = this.getTime() - this.firstClickTime;
+
+      if (elapsed < 400) {
+        // Rotate plane on double tap
+        this.angle += 90; // this.repositionToClosest('x');
+        // this.repositionToClosest('y');
+      }
+
+      this.firstClickTime = 0;
+    }
+  }, {
+    key: "getTime",
+    value: function getTime() {
+      //make a new date object
+      var d = new Date(); //return the number of milliseconds since 1 January 1970 00:00:00.
+
+      return d.getTime();
     }
   }]);
 
@@ -396,6 +654,7 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
       //     'assets/sprites/tp'
       // );
       this.load.image('plane-1', 'assets/images/planes/plane-1.png');
+      this.load.image('plane-2', 'assets/images/planes/plane-2.png');
       this.showPreloader();
     }
   }, {
@@ -708,7 +967,9 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
         }
       }
     });
+    _this.cellSize = 40;
     _this.cells = [];
+    _this.planes = [];
     return _this;
   }
 
@@ -728,35 +989,61 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       var y = 80;
       this.drawPlayerMap(x, y); //this.plane = new Plane(this);
 
-      var plane = new _components_Plane__WEBPACK_IMPORTED_MODULE_1__["default"]({
+      var plane1 = new _components_Plane__WEBPACK_IMPORTED_MODULE_1__["default"]({
         scene: this,
         x: game.config.width / 2 + 200,
-        y: 140
+        y: 140,
+        planeName: 'plane-1'
+      });
+      var plane2 = new _components_Plane__WEBPACK_IMPORTED_MODULE_1__["default"]({
+        scene: this,
+        x: game.config.width / 2 + 300,
+        y: 140,
+        planeName: 'plane-2'
       }); //debug
       // window.Socket = Socket;
 
-      window.SetPlaneScene = this;
+      window.SetPlaneScene = this; // let cls = localStorage.getItem('lastPlaceCells').split(',');
+      // this.drawByCells(cls);
+    } // debug
+
+  }, {
+    key: "drawByCells",
+    value: function drawByCells(cells) {
+      var _this2 = this;
+
+      cells.forEach(function (cl) {
+        //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+        var graphics = _this2.add.graphics({
+          lineStyle: {
+            width: 3,
+            color: 0x000000
+          }
+        });
+
+        graphics.strokeRectShape(_this2.cells[cl].rect);
+      });
     }
   }, {
     key: "drawPlayerMap",
     value: function drawPlayerMap(x, y) {
-      var sqareWidth = 40;
+      var squareWidth = this.cellSize;
       var cellsNum = 8;
 
       for (var i = 0; i < cellsNum; i++) {
         // Go vertical
         for (var j = 0; j < cellsNum; j++) {
           // Go horizontal
-          this.drawRect(x + j * sqareWidth, y + i * sqareWidth, sqareWidth, i, j);
+          this.drawRect(x + j * squareWidth, y + i * squareWidth, squareWidth, i, j);
         }
       }
 
-      this.drawBorder(x, y, sqareWidth, cellsNum);
+      this.drawBorder(x, y, squareWidth, cellsNum);
     }
   }, {
     key: "drawBorder",
-    value: function drawBorder(x, y, sqareWidth, cellsNum) {
-      var width = sqareWidth * cellsNum;
+    value: function drawBorder(x, y, squareWidth, cellsNum) {
+      var width = squareWidth * cellsNum;
       var rect = new Phaser.Geom.Rectangle(x, y, width, width); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
 
       var graphics = this.add.graphics({
@@ -770,8 +1057,8 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
     }
   }, {
     key: "drawRect",
-    value: function drawRect(x, y, sqareWidth, i, j, type) {
-      var rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    value: function drawRect(x, y, squareWidth, i, j, type) {
+      var rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
 
       var graphics = this.add.graphics({
         lineStyle: {
@@ -782,7 +1069,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       graphics.strokeRectShape(rect);
       var id = "".concat(j + 1).concat(i + 1);
       this.cells[id] = {
-        graphics: graphics,
+        id: id,
         rect: rect
       };
     }
@@ -791,21 +1078,21 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function drawSceneBackground() {
       var x = 0;
       var y = 0;
-      var sqareWidth = 40;
+      var squareWidth = this.cellSize;
       var cellsNum = 20;
 
       for (var i = 0; i < cellsNum; i++) {
         // Go vertical
         for (var j = 0; j < cellsNum; j++) {
           // Go horizontal
-          this.drawBgRect(x + j * sqareWidth, y + i * sqareWidth, sqareWidth, i, j);
+          this.drawBgRect(x + j * squareWidth, y + i * squareWidth, squareWidth, i, j);
         }
       }
     }
   }, {
     key: "drawBgRect",
-    value: function drawBgRect(x, y, sqareWidth, i, j) {
-      var rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    value: function drawBgRect(x, y, squareWidth, i, j) {
+      var rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
 
       var graphics = this.add.graphics({
         lineStyle: {

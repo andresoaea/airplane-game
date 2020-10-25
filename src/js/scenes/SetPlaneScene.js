@@ -12,7 +12,10 @@ class SetPlaneScene extends Phaser.Scene {
             },
         });
 
+        this.cellSize = 40;
         this.cells = [];
+
+        this.planes = [];
     }
 
     init() {
@@ -33,19 +36,41 @@ class SetPlaneScene extends Phaser.Scene {
         this.drawPlayerMap(x, y);
 
         //this.plane = new Plane(this);
-        let plane = new Plane({
+        let plane1 = new Plane({
             scene: this,
             x: game.config.width / 2 + 200,
             y: 140,
+            planeName: 'plane-1',
+        });
+
+        let plane2 = new Plane({
+            scene: this,
+            x: game.config.width / 2 + 300,
+            y: 140,
+            planeName: 'plane-2',
         });
 
         //debug
         // window.Socket = Socket;
         window.SetPlaneScene = this;
+
+        // let cls = localStorage.getItem('lastPlaceCells').split(',');
+        // this.drawByCells(cls);
+    }
+
+    // debug
+    drawByCells(cells) {
+        cells.forEach((cl) => {
+            //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+            var graphics = this.add.graphics({
+                lineStyle: { width: 3, color: 0x000000 },
+            });
+            graphics.strokeRectShape(this.cells[cl].rect);
+        });
     }
 
     drawPlayerMap(x, y) {
-        const sqareWidth = 40;
+        const squareWidth = this.cellSize;
         const cellsNum = 8;
 
         for (let i = 0; i < cellsNum; i++) {
@@ -53,20 +78,20 @@ class SetPlaneScene extends Phaser.Scene {
             for (let j = 0; j < cellsNum; j++) {
                 // Go horizontal
                 this.drawRect(
-                    x + j * sqareWidth,
-                    y + i * sqareWidth,
-                    sqareWidth,
+                    x + j * squareWidth,
+                    y + i * squareWidth,
+                    squareWidth,
                     i,
                     j
                 );
             }
         }
 
-        this.drawBorder(x, y, sqareWidth, cellsNum);
+        this.drawBorder(x, y, squareWidth, cellsNum);
     }
 
-    drawBorder(x, y, sqareWidth, cellsNum) {
-        let width = sqareWidth * cellsNum;
+    drawBorder(x, y, squareWidth, cellsNum) {
+        let width = squareWidth * cellsNum;
         let rect = new Phaser.Geom.Rectangle(x, y, width, width);
         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
         let graphics = this.add.graphics({
@@ -77,8 +102,8 @@ class SetPlaneScene extends Phaser.Scene {
         this.dropZoneRect = rect;
     }
 
-    drawRect(x, y, sqareWidth, i, j, type) {
-        let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
+    drawRect(x, y, squareWidth, i, j, type) {
+        let rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth);
         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
         let graphics = this.add.graphics({
             lineStyle: { width: 1, color: 0x000000 },
@@ -86,13 +111,14 @@ class SetPlaneScene extends Phaser.Scene {
         graphics.strokeRectShape(rect);
 
         const id = `${j + 1}${i + 1}`;
-        this.cells[id] = { graphics, rect };
+
+        this.cells[id] = { id, rect };
     }
 
     drawSceneBackground() {
         const x = 0;
         const y = 0;
-        const sqareWidth = 40;
+        const squareWidth = this.cellSize;
         const cellsNum = 20;
 
         for (let i = 0; i < cellsNum; i++) {
@@ -100,9 +126,9 @@ class SetPlaneScene extends Phaser.Scene {
             for (let j = 0; j < cellsNum; j++) {
                 // Go horizontal
                 this.drawBgRect(
-                    x + j * sqareWidth,
-                    y + i * sqareWidth,
-                    sqareWidth,
+                    x + j * squareWidth,
+                    y + i * squareWidth,
+                    squareWidth,
                     i,
                     j
                 );
@@ -110,8 +136,8 @@ class SetPlaneScene extends Phaser.Scene {
         }
     }
 
-    drawBgRect(x, y, sqareWidth, i, j) {
-        let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
+    drawBgRect(x, y, squareWidth, i, j) {
+        let rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth);
         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
         var graphics = this.add.graphics({
             lineStyle: { width: 1, color: 0xeeeeee },

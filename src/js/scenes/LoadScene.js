@@ -17,6 +17,7 @@ class LoadScene extends Phaser.Scene {
         // );
 
         this.load.image('plane-1', 'assets/images/planes/plane-1.png');
+        this.load.image('plane-2', 'assets/images/planes/plane-2.png');
 
         this.showPreloader();
     }
