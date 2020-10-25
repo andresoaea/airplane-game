@@ -97,8 +97,10 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
       y: _this.y
     });
 
-    _this.scene.input.on('pointerdown', _this.startDrag, _assertThisInitialized(_this));
+    _this.scene.input.on('pointerdown', _this.startDrag, _assertThisInitialized(_this)); // Other variables
 
+
+    _this.isInDropZone = false;
     return _this;
   }
 
@@ -120,7 +122,11 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
         var initialPos = this.dragObj.getData('initialPos'); // Scale
 
         if (pointer.x < initialPos.x) {
-          this.dragObj.setScale((game.config.width - this.dragObj.x) / 450);
+          if (this.isInDropZone) {
+            this.dragObj.setScale(1.1);
+          } else {
+            this.dragObj.setScale((game.config.width - this.dragObj.x) / 450);
+          }
         }
       }
     }
@@ -145,7 +151,9 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
         // });
 
         this.repositionToClosest('x');
-        this.repositionToClosest('y'); //this.dragObj.x =
+        this.repositionToClosest('y');
+        this.setPlanePositionInCells();
+        this.isInDropZone = true; //this.dragObj.x =
       } else {
         // Outside drop zone / Go back to initial position
         this.scene.tweens.add({
@@ -156,20 +164,39 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
           scaleY: 0.4,
           duration: 500
         });
+        this.isInDropZone = false;
       }
     }
   }, {
     key: "repositionToClosest",
     value: function repositionToClosest(axis) {
       var dropZone = this.getDropZone();
+      var cellsNum = 8;
 
-      for (var i = 0; i < 8; i++) {
+      for (var i = 0; i < cellsNum; i++) {
         if (i < 2) continue;
         var closest = i * 40;
-        var actualDist = this.dragObj[axis] - dropZone[axis];
+        var relativeDistance = this.dragObj[axis] - dropZone[axis];
 
-        if (actualDist - closest < 39) {
-          this.dragObj[axis] = closest + dropZone[axis] + (axis === 'x' ? 20 : 0);
+        if (axis === 'y') {
+          relativeDistance = relativeDistance + 20;
+        }
+
+        if (relativeDistance - closest < 39) {
+          var newPos = closest + dropZone[axis] + (axis === 'x' ? 20 : 0);
+
+          if (i > 5) {
+            // this.dragObj[axis] =
+            //     5 * 40 + dropZone[axis] + (axis === 'x' ? 20 : 0);
+            if (axis === 'x') {
+              this.dragObj.x = 5 * 40 + dropZone.x + 20;
+            } else {
+              this.dragObj.y = 5 * 40 + dropZone.x;
+            }
+          } else {
+            this.dragObj[axis] = newPos;
+          }
+
           break;
         }
       }
@@ -188,6 +215,17 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
         width: width,
         height: height
       };
+    }
+  }, {
+    key: "setPlanePositionInCells",
+    value: function setPlanePositionInCells() {
+      // let schema = [
+      //     [0, 0, 1, 0, 0],
+      //     [1, 1, 1, 1, 1],
+      //     [0, 0, 1, 0, 0],
+      //     [0, 1, 1, 1, 0],
+      // ];
+      console.log(this);
     }
   }]);
 

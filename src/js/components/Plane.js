@@ -13,6 +13,9 @@ class Plane extends Phaser.GameObjects.Sprite {
             });
 
         this.scene.input.on('pointerdown', this.startDrag, this);
+
+        // Other variables
+        this.isInDropZone = false;
     }
 
     startDrag(pointer, targets) {
@@ -32,9 +35,13 @@ class Plane extends Phaser.GameObjects.Sprite {
 
             // Scale
             if (pointer.x < initialPos.x) {
-                this.dragObj.setScale(
-                    (game.config.width - this.dragObj.x) / 450
-                );
+                if (this.isInDropZone) {
+                    this.dragObj.setScale(1.1);
+                } else {
+                    this.dragObj.setScale(
+                        (game.config.width - this.dragObj.x) / 450
+                    );
+                }
             }
         }
     }
@@ -70,6 +77,10 @@ class Plane extends Phaser.GameObjects.Sprite {
             this.repositionToClosest('x');
             this.repositionToClosest('y');
 
+            this.setPlanePositionInCells();
+
+            this.isInDropZone = true;
+
             //this.dragObj.x =
         } else {
             // Outside drop zone / Go back to initial position
@@ -81,21 +92,40 @@ class Plane extends Phaser.GameObjects.Sprite {
                 scaleY: 0.4,
                 duration: 500,
             });
+
+            this.isInDropZone = false;
         }
     }
 
     repositionToClosest(axis) {
         let dropZone = this.getDropZone();
 
-        for (let i = 0; i < 8; i++) {
+        let cellsNum = 8;
+        for (let i = 0; i < cellsNum; i++) {
             if (i < 2) continue;
 
             let closest = i * 40;
-            let actualDist = this.dragObj[axis] - dropZone[axis];
+            let relativeDistance = this.dragObj[axis] - dropZone[axis];
 
-            if (actualDist - closest < 39) {
-                this.dragObj[axis] =
-                    closest + dropZone[axis] + (axis === 'x' ? 20 : 0);
+            if (axis === 'y') {
+                relativeDistance = relativeDistance + 20;
+            }
+
+            if (relativeDistance - closest < 39) {
+                let newPos = closest + dropZone[axis] + (axis === 'x' ? 20 : 0);
+
+                if (i > 5) {
+                    // this.dragObj[axis] =
+                    //     5 * 40 + dropZone[axis] + (axis === 'x' ? 20 : 0);
+                    if (axis === 'x') {
+                        this.dragObj.x = 5 * 40 + dropZone.x + 20;
+                    } else {
+                        this.dragObj.y = 5 * 40 + dropZone.x;
+                    }
+                } else {
+                    this.dragObj[axis] = newPos;
+                }
+
                 break;
             }
         }
@@ -104,6 +134,17 @@ class Plane extends Phaser.GameObjects.Sprite {
     getDropZone() {
         let { x, y, width, height } = this.scene.dropZoneRect;
         return { x, y, width, height };
+    }
+
+    setPlanePositionInCells() {
+        // let schema = [
+        //     [0, 0, 1, 0, 0],
+        //     [1, 1, 1, 1, 1],
+        //     [0, 0, 1, 0, 0],
+        //     [0, 1, 1, 1, 0],
+        // ];
+
+        console.log(this);
     }
 }
 
