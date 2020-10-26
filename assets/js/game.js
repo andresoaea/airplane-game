@@ -88,7 +88,7 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
 
     _classCallCheck(this, Plane);
 
-    _this = _super.call(this, config.scene, config.x, config.y, config.planeName);
+    _this = _super.call(this, config.scene, config.x, config.y, "plane-".concat(config.planeNum));
     config.scene.add.existing(_assertThisInitialized(_this));
     _this.scene = config.scene;
 
@@ -100,8 +100,11 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
     _this.scene.input.on('pointerdown', _this.startDrag, _assertThisInitialized(_this)); // Other variables
 
 
-    _this.planeName = config.planeName;
-    _this.stablePos = [];
+    _this.planeName = "plane".concat(config.planeNum);
+    _this.stablePos = [{
+      x: _this.x,
+      y: _this.y
+    }];
     _this.planeCells = [];
     _this.isInDropZone = false;
     _this.firstClickTime = 0; // this.lastPos = { x: 0, y: 0 };
@@ -189,16 +192,23 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
         this.isInDropZone = true; //this.dragObj.x =
       } else {
         // Outside drop zone / Go back to initial position
-        this.scene.tweens.add({
-          targets: [this.dragObj],
-          x: this.dragObj.getData('initialPos').x,
-          y: this.dragObj.getData('initialPos').y,
-          scaleX: 0.4,
-          scaleY: 0.4,
-          duration: 500
-        });
+        this.goToInitialPosition();
         this.isInDropZone = false;
       }
+    }
+  }, {
+    key: "goToInitialPosition",
+    value: function goToInitialPosition() {
+      this.scene.tweens.add({
+        targets: [this.dragObj],
+        x: this.dragObj.getData('initialPos').x,
+        y: this.dragObj.getData('initialPos').y,
+        scaleX: 0.4,
+        scaleY: 0.4,
+        duration: 500
+      }); // console.log(this.scene.planes);
+
+      delete this.scene.planes[this.planeName]; // console.log(this.scene.planes);
     }
   }, {
     key: "repositionToClosest",
@@ -298,8 +308,6 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
   }, {
     key: "setPlaneCells",
     value: function setPlaneCells() {
-      var _this2 = this;
-
       var headCellId;
       var planeData = this.getPlanePositionData();
       var headPoint = planeData.headPoint; //console.log(planeData);
@@ -349,21 +357,36 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
 
 
       this.planeCells = planeCells;
-      var existingCurrentPlane = this.scene.planes.find(function (plane) {
-        return plane.name === _this2.planeName;
-      });
 
-      if (!existingCurrentPlane) {
-        this.scene.planes.push({
-          name: this.planeName,
+      if (this.scene.planes[this.planeName]) {
+        this.scene.planes[this.planeName].cells = planeCells;
+      } // Push current plane to planes object
+
+
+      var currPlaneExists = Object.keys(this.scene.planes).includes(this.planeName);
+
+      if (!currPlaneExists) {
+        this.scene.planes[this.planeName] = {
           cells: planeCells,
           instance: this
-        });
-      }
+        };
+      } // let existingCurrentPlane = this.scene.planes.find((plane) => {
+      //     return plane.name === this.planeName;
+      // });
+      // if (!existingCurrentPlane) {
+      //     this.scene.planes.push({
+      //         name: this.planeName,
+      //         cells: planeCells,
+      //         instance: this,
+      //     });
+      // }
+      // Check for overlap
 
-      var isOverlaping = this.checkOverlap();
 
-      if (!isOverlaping) {
+      var isOverlapping = this.checkOverlap();
+      console.log(isOverlapping);
+
+      if (!isOverlapping) {
         this.stablePos.push({
           x: this.x,
           y: this.y
@@ -378,19 +401,29 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
   }, {
     key: "checkOverlap",
     value: function checkOverlap() {
-      var _this3 = this;
+      var keys = Object.keys(this.scene.planes);
+      if (keys.length < 2) return false;
+      var firstPlaneCells = this.scene.planes[keys[0]].cells; // console.log(firstPlaneCells);
 
-      if (this.scene.planes.length < 2) return false;
       var overlap = false;
-      var firstPlaneCells = this.scene.planes[0].cells;
-      this.planeCells.forEach(function (cell) {
-        if (firstPlaneCells.includes(cell)) {
-          console.log('overlap');
-          _this3.x = _this3.stablePos[0].x;
-          _this3.y = _this3.stablePos[0].y;
+
+      for (var i = 0; i < this.planeCells.length; i++) {
+        if (firstPlaneCells.includes(this.planeCells[i])) {
+          //console.log('overlap');
+          // Reposition plane back to last stable positio
+          if (this.stablePos[0].x === this.getData('initialPos').x && this.stablePos[0].y === this.getData('initialPos').y) {
+            this.goToInitialPosition(); //console.log('overl init');
+          } else {
+            this.x = this.stablePos[0].x;
+            this.y = this.stablePos[0].y; // console.log('overl afetr');
+          }
+
+          console.log(this.planeCells[i]);
           overlap = true;
+          break;
         }
-      });
+      }
+
       return overlap;
     }
   }, {
@@ -653,6 +686,7 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
       //     'assets/sprites/tp/atlas.json',
       //     'assets/sprites/tp'
       // );
+      this.load.image('btn-start-game', 'assets/images/btn-start-game.png');
       this.load.image('plane-1', 'assets/images/planes/plane-1.png');
       this.load.image('plane-2', 'assets/images/planes/plane-2.png');
       this.showPreloader();
@@ -780,13 +814,33 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 
   _createClass(MainScene, [{
     key: "init",
-    value: function init() {
+    value: function init(data) {
+      this.planesCells = data.planesData.cells;
       this.cameras.main.setBackgroundColor('#fff');
+    } //debug
+
+  }, {
+    key: "drawByCells",
+    value: function drawByCells(cells) {
+      var _this2 = this;
+
+      console.log(this.cells);
+      cells.forEach(function (cl) {
+        //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+        var graphics = _this2.add.graphics({
+          lineStyle: {
+            width: 3,
+            color: 0x000000
+          }
+        });
+
+        graphics.strokeRectShape(_this2.cells["o".concat(cl)].rect);
+      });
     }
   }, {
     key: "create",
     value: function create() {
-      var _this2 = this;
+      var _this3 = this;
 
       this.drawSceneBackground(); // Setup players
 
@@ -800,19 +854,19 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
         if (msg.opponentDisconnected) {
           console.log('opponent disconnected');
 
-          _this2.scene.restart();
+          _this3.scene.restart();
         }
 
         var cellId = msg.cellClicked;
         if (!cellId) return;
 
-        var graphics = _this2.add.graphics({
+        var graphics = _this3.add.graphics({
           fillStyle: {
             color: 0x0000ff
           }
         });
 
-        graphics.fillRectShape(_this2.cells[cellId.replace('p', 'o')].rect);
+        graphics.fillRectShape(_this3.cells[cellId.replace('p', 'o')].rect);
       };
 
       var x = 40;
@@ -822,6 +876,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 
       window.Socket = _Socket__WEBPACK_IMPORTED_MODULE_0__["default"];
       window.MainScene = this;
+      this.drawByCells(this.planesCells);
     }
   }, {
     key: "drawPlayerMap",
@@ -841,7 +896,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "drawRect",
     value: function drawRect(x, y, sqareWidth, i, j, type) {
-      var _this3 = this;
+      var _this4 = this;
 
       var rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
 
@@ -863,12 +918,12 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
       graphics.on('pointerdown', function () {
         if (type !== 'opponent') return;
 
-        _this3.socket.send(JSON.stringify({
+        _this4.socket.send(JSON.stringify({
           cellClicked: id
         })); // console.log(graphics.getData('id'));
 
 
-        graphics = _this3.add.graphics({
+        graphics = _this4.add.graphics({
           fillStyle: {
             color: 0x0000ff
           }
@@ -927,6 +982,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_Plane__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Plane */ "./src/js/components/Plane.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -969,7 +1036,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
     });
     _this.cellSize = 40;
     _this.cells = [];
-    _this.planes = [];
+    _this.planes = {};
     return _this;
   }
 
@@ -993,35 +1060,67 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
         scene: this,
         x: game.config.width / 2 + 200,
         y: 140,
-        planeName: 'plane-1'
+        planeNum: 1
       });
       var plane2 = new _components_Plane__WEBPACK_IMPORTED_MODULE_1__["default"]({
         scene: this,
         x: game.config.width / 2 + 300,
         y: 140,
-        planeName: 'plane-2'
-      }); //debug
+        planeNum: 2
+      }); // Start game btn
+
+      this.addStartGame(); //debug
       // window.Socket = Socket;
 
       window.SetPlaneScene = this; // let cls = localStorage.getItem('lastPlaceCells').split(',');
       // this.drawByCells(cls);
+    }
+  }, {
+    key: "addStartGame",
+    value: function addStartGame() {
+      var _this2 = this;
+
+      this.add.image(630, 380, 'btn-start-game').setInteractive({
+        useHandCursor: true
+      }).on('pointerup', function () {
+        var allPlanesCells = [];
+        var keys = Object.keys(_this2.planes);
+        var keysLength = keys.length;
+
+        if (keysLength < 2) {
+          // add 2 planes
+          return;
+        }
+
+        for (var i = 0; i < keysLength; i++) {
+          allPlanesCells = [].concat(_toConsumableArray(allPlanesCells), _toConsumableArray(_this2.planes[keys[i]].cells));
+        }
+
+        _this2.scene.stop();
+
+        _this2.scene.start('MainScene', {
+          planesData: {
+            cells: allPlanesCells
+          }
+        });
+      });
     } // debug
 
   }, {
     key: "drawByCells",
     value: function drawByCells(cells) {
-      var _this2 = this;
+      var _this3 = this;
 
       cells.forEach(function (cl) {
         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-        var graphics = _this2.add.graphics({
+        var graphics = _this3.add.graphics({
           lineStyle: {
             width: 3,
             color: 0x000000
           }
         });
 
-        graphics.strokeRectShape(_this2.cells[cl].rect);
+        graphics.strokeRectShape(_this3.cells[cl].rect);
       });
     }
   }, {

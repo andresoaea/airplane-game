@@ -1,6 +1,6 @@
 class Plane extends Phaser.GameObjects.Sprite {
     constructor(config) {
-        super(config.scene, config.x, config.y, config.planeName);
+        super(config.scene, config.x, config.y, `plane-${config.planeNum}`);
         config.scene.add.existing(this);
 
         this.scene = config.scene;
@@ -16,8 +16,13 @@ class Plane extends Phaser.GameObjects.Sprite {
 
         // Other variables
 
-        this.planeName = config.planeName;
-        this.stablePos = [];
+        this.planeName = `plane${config.planeNum}`;
+        this.stablePos = [
+            {
+                x: this.x,
+                y: this.y,
+            },
+        ];
         this.planeCells = [];
         this.isInDropZone = false;
         this.firstClickTime = 0;
@@ -124,17 +129,25 @@ class Plane extends Phaser.GameObjects.Sprite {
             //this.dragObj.x =
         } else {
             // Outside drop zone / Go back to initial position
-            this.scene.tweens.add({
-                targets: [this.dragObj],
-                x: this.dragObj.getData('initialPos').x,
-                y: this.dragObj.getData('initialPos').y,
-                scaleX: 0.4,
-                scaleY: 0.4,
-                duration: 500,
-            });
+            this.goToInitialPosition();
 
             this.isInDropZone = false;
         }
+    }
+
+    goToInitialPosition() {
+        this.scene.tweens.add({
+            targets: [this.dragObj],
+            x: this.dragObj.getData('initialPos').x,
+            y: this.dragObj.getData('initialPos').y,
+            scaleX: 0.4,
+            scaleY: 0.4,
+            duration: 500,
+        });
+
+        // console.log(this.scene.planes);
+        delete this.scene.planes[this.planeName];
+        // console.log(this.scene.planes);
     }
 
     repositionToClosest(axis) {
@@ -282,20 +295,39 @@ class Plane extends Phaser.GameObjects.Sprite {
         //console.log(planeCells);
         this.planeCells = planeCells;
 
-        let existingCurrentPlane = this.scene.planes.find((plane) => {
-            return plane.name === this.planeName;
-        });
-
-        if (!existingCurrentPlane) {
-            this.scene.planes.push({
-                name: this.planeName,
-                cells: planeCells,
-                instance: this,
-            });
+        if (this.scene.planes[this.planeName]) {
+            this.scene.planes[this.planeName].cells = planeCells;
         }
 
-        let isOverlaping = this.checkOverlap();
-        if (!isOverlaping) {
+        // Push current plane to planes object
+
+        const currPlaneExists = Object.keys(this.scene.planes).includes(
+            this.planeName
+        );
+
+        if (!currPlaneExists) {
+            this.scene.planes[this.planeName] = {
+                cells: planeCells,
+                instance: this,
+            };
+        }
+
+        // let existingCurrentPlane = this.scene.planes.find((plane) => {
+        //     return plane.name === this.planeName;
+        // });
+
+        // if (!existingCurrentPlane) {
+        //     this.scene.planes.push({
+        //         name: this.planeName,
+        //         cells: planeCells,
+        //         instance: this,
+        //     });
+        // }
+
+        // Check for overlap
+        let isOverlapping = this.checkOverlap();
+        console.log(isOverlapping);
+        if (!isOverlapping) {
             this.stablePos.push({
                 x: this.x,
                 y: this.y,
@@ -310,19 +342,37 @@ class Plane extends Phaser.GameObjects.Sprite {
     }
 
     checkOverlap() {
-        if (this.scene.planes.length < 2) return false;
+        let keys = Object.keys(this.scene.planes);
+        if (keys.length < 2) return false;
 
+        let firstPlaneCells = this.scene.planes[keys[0]].cells;
+        // console.log(firstPlaneCells);
         let overlap = false;
-        let firstPlaneCells = this.scene.planes[0].cells;
 
-        this.planeCells.forEach((cell) => {
-            if (firstPlaneCells.includes(cell)) {
-                console.log('overlap');
-                this.x = this.stablePos[0].x;
-                this.y = this.stablePos[0].y;
+        for (let i = 0; i < this.planeCells.length; i++) {
+            if (firstPlaneCells.includes(this.planeCells[i])) {
+                //console.log('overlap');
+
+                // Reposition plane back to last stable positio
+                if (
+                    this.stablePos[0].x === this.getData('initialPos').x &&
+                    this.stablePos[0].y === this.getData('initialPos').y
+                ) {
+                    this.goToInitialPosition();
+
+                    //console.log('overl init');
+                } else {
+                    this.x = this.stablePos[0].x;
+                    this.y = this.stablePos[0].y;
+                    // console.log('overl afetr');
+                }
+
+                console.log(this.planeCells[i]);
+
                 overlap = true;
+                break;
             }
-        });
+        }
 
         return overlap;
     }

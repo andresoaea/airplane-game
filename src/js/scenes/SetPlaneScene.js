@@ -15,7 +15,7 @@ class SetPlaneScene extends Phaser.Scene {
         this.cellSize = 40;
         this.cells = [];
 
-        this.planes = [];
+        this.planes = {};
     }
 
     init() {
@@ -40,15 +40,18 @@ class SetPlaneScene extends Phaser.Scene {
             scene: this,
             x: game.config.width / 2 + 200,
             y: 140,
-            planeName: 'plane-1',
+            planeNum: 1,
         });
 
         let plane2 = new Plane({
             scene: this,
             x: game.config.width / 2 + 300,
             y: 140,
-            planeName: 'plane-2',
+            planeNum: 2,
         });
+
+        // Start game btn
+        this.addStartGame();
 
         //debug
         // window.Socket = Socket;
@@ -56,6 +59,37 @@ class SetPlaneScene extends Phaser.Scene {
 
         // let cls = localStorage.getItem('lastPlaceCells').split(',');
         // this.drawByCells(cls);
+    }
+
+    addStartGame() {
+        this.add
+            .image(630, 380, 'btn-start-game')
+            .setInteractive({ useHandCursor: true })
+            .on('pointerup', () => {
+                let allPlanesCells = [];
+
+                let keys = Object.keys(this.planes);
+                let keysLength = keys.length;
+
+                if (keysLength < 2) {
+                    // add 2 planes
+                    return;
+                }
+
+                for (let i = 0; i < keysLength; i++) {
+                    allPlanesCells = [
+                        ...allPlanesCells,
+                        ...this.planes[keys[i]].cells,
+                    ];
+                }
+
+                this.scene.stop();
+                this.scene.start('MainScene', {
+                    planesData: {
+                        cells: allPlanesCells,
+                    },
+                });
+            });
     }
 
     // debug

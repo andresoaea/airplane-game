@@ -16,6 +16,7 @@ class LoadScene extends Phaser.Scene {
         //     'assets/sprites/tp'
         // );
 
+        this.load.image('btn-start-game', 'assets/images/btn-start-game.png');
         this.load.image('plane-1', 'assets/images/planes/plane-1.png');
         this.load.image('plane-2', 'assets/images/planes/plane-2.png');
 

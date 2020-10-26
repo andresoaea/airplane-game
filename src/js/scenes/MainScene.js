@@ -15,8 +15,22 @@ class MainScene extends Phaser.Scene {
         this.cells = {};
     }
 
-    init() {
+    init(data) {
+        this.planesCells = data.planesData.cells;
         this.cameras.main.setBackgroundColor('#fff');
+    }
+
+    //debug
+    drawByCells(cells) {
+        console.log(this.cells);
+
+        cells.forEach((cl) => {
+            //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+            var graphics = this.add.graphics({
+                lineStyle: { width: 3, color: 0x000000 },
+            });
+            graphics.strokeRectShape(this.cells[`o${cl}`].rect);
+        });
     }
 
     create() {
@@ -55,6 +69,7 @@ class MainScene extends Phaser.Scene {
         //debug
         window.Socket = Socket;
         window.MainScene = this;
+        this.drawByCells(this.planesCells);
     }
 
     drawPlayerMap(x, y, type = null) {
