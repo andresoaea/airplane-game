@@ -18,6 +18,14 @@
                 max-width: 100%;
             }
         </style>
+
+        <script>
+            function makeFull() {
+                document.querySelector('body').requestFullscreen();
+                document.querySelector('canvas').style.width = '100vw';
+                document.querySelector('canvas').style.height = '100vh';
+            }
+        </script>
     </head>
     <body>
         <p
@@ -27,6 +35,13 @@
         </p>
 
         <div id="game"></div>
+
+        <div
+            onclick="makeFull()"
+            style="position: absolute; top: 10px; left: 10px"
+        >
+            <h3>MAKE FULL</h3>
+        </div>
 
         <div id="adCountDown">
             <h5>Advertisement</h5>

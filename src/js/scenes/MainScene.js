@@ -1,4 +1,4 @@
-import Socket from '../Socket';
+// import Socket from '../Socket';
 import Players from '../components/Players';
 
 class MainScene extends Phaser.Scene {
@@ -13,16 +13,18 @@ class MainScene extends Phaser.Scene {
         });
 
         this.cells = {};
+        this.opponentData = {}; // it is set on Socket class
     }
 
     init(data) {
-        this.planesCells = data.planesData.cells;
+        this.myPlanesCells = data.planesData.cells;
+        // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
         this.cameras.main.setBackgroundColor('#fff');
     }
 
     //debug
     drawByCells(cells) {
-        console.log(this.cells);
+        // console.log(this.cells);
 
         cells.forEach((cl) => {
             //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
@@ -36,40 +38,20 @@ class MainScene extends Phaser.Scene {
     create() {
         this.drawSceneBackground();
 
-        // Setup players
-        this.players = new Players();
+        // this.socket.sendOnConnect({
+        //     action: 'setOpponentData',
+        //     opponentData: {
+        //         planesCells: this.myPlanesCells,
+        //     },
+        // });
 
-        this.socket = new Socket(this.players);
-
-        this.socket.conn.onmessage = (e) => {
-            console.log(e.data);
-            const msg = JSON.parse(e.data);
-
-            if (msg.opponentDisconnected) {
-                console.log('opponent disconnected');
-                this.scene.restart();
-            }
-
-            const cellId = msg.cellClicked;
-            if (!cellId) return;
-
-            const graphics = this.add.graphics({
-                fillStyle: { color: 0x0000ff },
-            });
-
-            graphics.fillRectShape(this.cells[cellId.replace('p', 'o')].rect);
-        };
-
-        const x = 40;
-        const y = 80;
-
-        this.drawPlayerMap(x, y);
-        this.drawPlayerMap(440, y, 'opponent');
+        this.drawPlayerMap(40, 80);
+        this.drawPlayerMap(440, 80, 'opponent');
 
         //debug
-        window.Socket = Socket;
+        //window.Socket = Socket;
         window.MainScene = this;
-        this.drawByCells(this.planesCells);
+        this.drawByCells(this.myPlanesCells);
     }
 
     drawPlayerMap(x, y, type = null) {
@@ -113,11 +95,10 @@ class MainScene extends Phaser.Scene {
         graphics.on('pointerdown', () => {
             if (type !== 'opponent') return;
 
-            this.socket.send(
-                JSON.stringify({
-                    cellClicked: id,
-                })
-            );
+            this.socket.send({
+                action: 'attack',
+                cellClicked: id,
+            });
 
             // console.log(graphics.getData('id'));
             graphics = this.add.graphics({

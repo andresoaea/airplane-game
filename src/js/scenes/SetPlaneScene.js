@@ -1,5 +1,6 @@
 import Players from '../components/Players';
 import Plane from '../components/Plane';
+import Socket from '../Socket';
 
 class SetPlaneScene extends Phaser.Scene {
     constructor() {
@@ -28,8 +29,6 @@ class SetPlaneScene extends Phaser.Scene {
         // Setup players
         this.players = new Players();
 
-        // this.socket = new Socket(this.players);
-
         const x = 120;
         const y = 80;
 
@@ -53,6 +52,11 @@ class SetPlaneScene extends Phaser.Scene {
         // Start game btn
         this.addStartGame();
 
+        let mainScene = game.scene.getScene('MainScene');
+        mainScene.players = this.players;
+        this.socket = new Socket(mainScene);
+        mainScene.socket = this.socket;
+
         //debug
         // window.Socket = Socket;
         window.SetPlaneScene = this;
@@ -66,6 +70,7 @@ class SetPlaneScene extends Phaser.Scene {
             .image(630, 380, 'btn-start-game')
             .setInteractive({ useHandCursor: true })
             .on('pointerup', () => {
+                // let heads = [];
                 let allPlanesCells = [];
 
                 let keys = Object.keys(this.planes);
@@ -77,6 +82,7 @@ class SetPlaneScene extends Phaser.Scene {
                 }
 
                 for (let i = 0; i < keysLength; i++) {
+                    //heads.push(this.planes[keys[i]].cells[0]);
                     allPlanesCells = [
                         ...allPlanesCells,
                         ...this.planes[keys[i]].cells,

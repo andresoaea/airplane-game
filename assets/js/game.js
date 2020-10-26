@@ -16,28 +16,84 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var Socket = /*#__PURE__*/function () {
-  function Socket(players) {
+  function Socket(scene) {
+    var _this = this;
+
     _classCallCheck(this, Socket);
 
-    var url = "ws://192.168.0.105:8080/comm?playerId=".concat(players.player.id, "&opponentId=").concat(players.opponent.id);
-    var conn = new WebSocket(url);
+    this.scene = scene;
+    var url = "ws://192.168.0.105:8080/comm?playerId=".concat(scene.players.player.id, "&opponentId=").concat(scene.players.opponent.id);
+    var conn = new WebSocket(url); // //
+    // this.toSend = null;
+    // //
 
     conn.onopen = function (e) {
-      console.log("Connection established to ".concat(url));
-    }; // conn.onmessage = (e) => {
-    //     console.log(e.data);
-    // };
-
+      console.log("Connection established to ".concat(url)); // this.send(this.toSend);
+    };
 
     this.conn = conn;
+
+    conn.onmessage = function (e) {
+      // console.log(e.data);
+      var msg = JSON.parse(e.data);
+
+      _this.handleReceivedMessage(msg);
+    };
   }
 
   _createClass(Socket, [{
+    key: "handleReceivedMessage",
+    value: function handleReceivedMessage(msg) {
+      if (!msg.action) return;
+      console.log(msg);
+
+      switch (msg.action) {
+        case 'opponentDisconnected':
+          this.doOpponentDisconnected(msg);
+          break;
+
+        case 'attack':
+          this.doAttack(msg);
+          break;
+
+        case 'setOpponentData':
+          this.doSetOpponentData(msg);
+          break;
+      }
+    }
+  }, {
+    key: "doSetOpponentData",
+    value: function doSetOpponentData(msg) {
+      this.scene.opponentData = msg.opponentData;
+    }
+  }, {
+    key: "doAttack",
+    value: function doAttack(msg) {
+      var cellId = msg.cellClicked;
+      if (!cellId) return;
+      var graphics = this.scene.add.graphics({
+        fillStyle: {
+          color: 0x0000ff
+        }
+      });
+      graphics.fillRectShape(this.scene.cells[cellId.replace('p', 'o')].rect);
+    }
+  }, {
+    key: "doOpponentDisconnected",
+    value: function doOpponentDisconnected(msg) {
+      console.log('opponent disconnected');
+      this.scene.scene.start('SetPlaneScene');
+    } // Used external
+
+  }, {
     key: "send",
     value: function send(msg) {
       if (this.conn.readyState === WebSocket.CLOSED) return;
-      return this.conn.send(msg);
-    }
+      return this.conn.send(JSON.stringify(msg));
+    } // sendOnConnect(msg) {
+    //     this.toSend = msg;
+    // }
+
   }]);
 
   return Socket;
@@ -764,8 +820,7 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _Socket__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Socket */ "./src/js/Socket.js");
-/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
+/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -788,7 +843,7 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-
+// import Socket from '../Socket';
 
 
 var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
@@ -809,13 +864,16 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
       }
     });
     _this.cells = {};
+    _this.opponentData = {}; // it is set on Socket class
+
     return _this;
   }
 
   _createClass(MainScene, [{
     key: "init",
     value: function init(data) {
-      this.planesCells = data.planesData.cells;
+      this.myPlanesCells = data.planesData.cells; // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
+
       this.cameras.main.setBackgroundColor('#fff');
     } //debug
 
@@ -824,7 +882,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function drawByCells(cells) {
       var _this2 = this;
 
-      console.log(this.cells);
+      // console.log(this.cells);
       cells.forEach(function (cl) {
         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
         var graphics = _this2.add.graphics({
@@ -840,43 +898,19 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "create",
     value: function create() {
-      var _this3 = this;
+      this.drawSceneBackground(); // this.socket.sendOnConnect({
+      //     action: 'setOpponentData',
+      //     opponentData: {
+      //         planesCells: this.myPlanesCells,
+      //     },
+      // });
 
-      this.drawSceneBackground(); // Setup players
+      this.drawPlayerMap(40, 80);
+      this.drawPlayerMap(440, 80, 'opponent'); //debug
+      //window.Socket = Socket;
 
-      this.players = new _components_Players__WEBPACK_IMPORTED_MODULE_1__["default"]();
-      this.socket = new _Socket__WEBPACK_IMPORTED_MODULE_0__["default"](this.players);
-
-      this.socket.conn.onmessage = function (e) {
-        console.log(e.data);
-        var msg = JSON.parse(e.data);
-
-        if (msg.opponentDisconnected) {
-          console.log('opponent disconnected');
-
-          _this3.scene.restart();
-        }
-
-        var cellId = msg.cellClicked;
-        if (!cellId) return;
-
-        var graphics = _this3.add.graphics({
-          fillStyle: {
-            color: 0x0000ff
-          }
-        });
-
-        graphics.fillRectShape(_this3.cells[cellId.replace('p', 'o')].rect);
-      };
-
-      var x = 40;
-      var y = 80;
-      this.drawPlayerMap(x, y);
-      this.drawPlayerMap(440, y, 'opponent'); //debug
-
-      window.Socket = _Socket__WEBPACK_IMPORTED_MODULE_0__["default"];
       window.MainScene = this;
-      this.drawByCells(this.planesCells);
+      this.drawByCells(this.myPlanesCells);
     }
   }, {
     key: "drawPlayerMap",
@@ -896,7 +930,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "drawRect",
     value: function drawRect(x, y, sqareWidth, i, j, type) {
-      var _this4 = this;
+      var _this3 = this;
 
       var rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
 
@@ -918,12 +952,13 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
       graphics.on('pointerdown', function () {
         if (type !== 'opponent') return;
 
-        _this4.socket.send(JSON.stringify({
+        _this3.socket.send({
+          action: 'attack',
           cellClicked: id
-        })); // console.log(graphics.getData('id'));
+        }); // console.log(graphics.getData('id'));
 
 
-        graphics = _this4.add.graphics({
+        graphics = _this3.add.graphics({
           fillStyle: {
             color: 0x0000ff
           }
@@ -980,6 +1015,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
 /* harmony import */ var _components_Plane__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Plane */ "./src/js/components/Plane.js");
+/* harmony import */ var _Socket__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../Socket */ "./src/js/Socket.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -1017,6 +1053,7 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
+
 var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
   _inherits(SetPlaneScene, _Phaser$Scene);
 
@@ -1050,8 +1087,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function create() {
       this.drawSceneBackground(); // Setup players
 
-      this.players = new _components_Players__WEBPACK_IMPORTED_MODULE_0__["default"](); // this.socket = new Socket(this.players);
-
+      this.players = new _components_Players__WEBPACK_IMPORTED_MODULE_0__["default"]();
       var x = 120;
       var y = 80;
       this.drawPlayerMap(x, y); //this.plane = new Plane(this);
@@ -1069,7 +1105,11 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
         planeNum: 2
       }); // Start game btn
 
-      this.addStartGame(); //debug
+      this.addStartGame();
+      var mainScene = game.scene.getScene('MainScene');
+      mainScene.players = this.players;
+      this.socket = new _Socket__WEBPACK_IMPORTED_MODULE_2__["default"](mainScene);
+      mainScene.socket = this.socket; //debug
       // window.Socket = Socket;
 
       window.SetPlaneScene = this; // let cls = localStorage.getItem('lastPlaceCells').split(',');
@@ -1083,6 +1123,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.add.image(630, 380, 'btn-start-game').setInteractive({
         useHandCursor: true
       }).on('pointerup', function () {
+        // let heads = [];
         var allPlanesCells = [];
         var keys = Object.keys(_this2.planes);
         var keysLength = keys.length;
@@ -1093,6 +1134,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
         }
 
         for (var i = 0; i < keysLength; i++) {
+          //heads.push(this.planes[keys[i]].cells[0]);
           allPlanesCells = [].concat(_toConsumableArray(allPlanesCells), _toConsumableArray(_this2.planes[keys[i]].cells));
         }
 
