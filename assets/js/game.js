@@ -9,11 +9,15 @@
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var phaser__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phaser */ "./node_modules/phaser/dist/phaser.js");
+/* harmony import */ var phaser__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(phaser__WEBPACK_IMPORTED_MODULE_0__);
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+
 
 var Socket = /*#__PURE__*/function () {
   function Socket(scene) {
@@ -22,7 +26,7 @@ var Socket = /*#__PURE__*/function () {
     _classCallCheck(this, Socket);
 
     this.scene = scene;
-    var url = "ws://192.168.0.105:8080/comm?playerId=".concat(scene.players.player.id, "&opponentId=").concat(scene.players.opponent.id);
+    var url = "ws://192.168.0.105:8080/comm?playerId=".concat(scene.players.player.id);
     var conn = new WebSocket(url); // //
     // this.toSend = null;
     // //
@@ -48,6 +52,10 @@ var Socket = /*#__PURE__*/function () {
       console.log(msg);
 
       switch (msg.action) {
+        case 'setMyRoom':
+          game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
+          break;
+
         case 'opponentDisconnected':
           this.doOpponentDisconnected(msg);
           break;
@@ -646,19 +654,21 @@ var Players = /*#__PURE__*/function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var phaser__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phaser */ "./node_modules/phaser/dist/phaser.js");
+/* WEBPACK VAR INJECTION */(function(__webpack_provided_window_dot_jQuery) {/* harmony import */ var phaser__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phaser */ "./node_modules/phaser/dist/phaser.js");
 /* harmony import */ var phaser__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(phaser__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./scenes/LoadScene */ "./src/js/scenes/LoadScene.js");
 /* harmony import */ var _scenes_MainScene__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./scenes/MainScene */ "./src/js/scenes/MainScene.js");
 /* harmony import */ var _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./scenes/SetPlaneScene */ "./src/js/scenes/SetPlaneScene.js");
+/* harmony import */ var _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./scenes/SetOpponentScene */ "./src/js/scenes/SetOpponentScene.js");
  // import moment, { lang } from 'moment';
 // import Swal from 'sweetalert2';
 // window.moment = moment;
 // window.Swal = Swal;
-// //indow.jQuery = window.$ = require('jquery');
 
+__webpack_provided_window_dot_jQuery = window.$ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
 window.axios = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
 
 
 
@@ -682,8 +692,10 @@ var game = new phaser__WEBPACK_IMPORTED_MODULE_0___default.a.Game(config);
 game.scene.add('LoadScene', new _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_1__["default"]());
 game.scene.add('MainScene', new _scenes_MainScene__WEBPACK_IMPORTED_MODULE_2__["default"]());
 game.scene.add('SetPlaneScene', new _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_3__["default"]());
+game.scene.add('SetOpponentScene', new _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_4__["default"]());
 game.scene.start('LoadScene');
 window.game = game;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
 
 /***/ }),
 
@@ -1004,6 +1016,102 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 
 /***/ }),
 
+/***/ "./src/js/scenes/SetOpponentScene.js":
+/*!*******************************************!*\
+  !*** ./src/js/scenes/SetOpponentScene.js ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function($) {function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function () { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
+  _inherits(SetOpponentScene, _Phaser$Scene);
+
+  var _super = _createSuper(SetOpponentScene);
+
+  function SetOpponentScene() {
+    _classCallCheck(this, SetOpponentScene);
+
+    return _super.call(this, {
+      key: 'SetOpponentScene'
+    });
+  }
+
+  _createClass(SetOpponentScene, [{
+    key: "init",
+    value: function init(data) {
+      this.setPlaneScene = data.setPlaneScene;
+      this.events.on('shutdown', this.destroy, this);
+    }
+  }, {
+    key: "create",
+    value: function create() {
+      var html = "\n            <div class=\"flex items-center rounded\">\n\n            <div class=\"flex w-full\">\n                <div class=\"flex flex-1 justify-center items-center flex-col\">\n                    <p class=\"text-gray-800 mb-2\">Create a room</p>\n                    <button id=\"createRoom\" class=\"bg-pink-700 px-4 py-2 text-white rounded\">Create</button>\n                </div> \n                <div class=\"flex flex-1 justify-center items-center flex-col\">\n                <p class=\"text-gray-800 mb-2\">Go to a room</p>\n                    <input id=\"roomId\" class=\"mb-2\" value=\"0000\" type=\"text\" />\n                    <button id=\"goToRoom\" class=\"bg-blue-700 px-4 py-2 text-white rounded\">Go play</button>\n                </div> \n\n            </div> \n\n            </div>\n        ";
+      var el = document.createElement('div');
+      el.innerHTML = html;
+      el.style.width = $('canvas').width() + 'px';
+      el.style.height = $('canvas').height() + 'px';
+      el.classList = 'scene-html absolute t-0 l-0 flex justify-center items-center';
+      $('#game').append(el);
+      $('body').on('click', '#createRoom', this.getMyRoom.bind(this));
+      $('body').on('click', '#goToRoom', function () {
+        console.log($('#roomId').val());
+      });
+    }
+  }, {
+    key: "getMyRoom",
+    value: function getMyRoom() {
+      this.setPlaneScene.socket.send({
+        action: 'getMyRoom'
+      });
+    } // Called from Socket class on message received from server
+
+  }, {
+    key: "showMyRoomId",
+    value: function showMyRoomId(id) {
+      $('#createRoom').after("<h4>".concat(id, "</h4>")).remove();
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      $('.scene-html').fadeOut(500, function () {
+        $('.scene-html').remove();
+        console.log('removed');
+      });
+    }
+  }]);
+
+  return SetOpponentScene;
+}(Phaser.Scene);
+
+/* harmony default export */ __webpack_exports__["default"] = (SetOpponentScene);
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
 /***/ "./src/js/scenes/SetPlaneScene.js":
 /*!****************************************!*\
   !*** ./src/js/scenes/SetPlaneScene.js ***!
@@ -1109,9 +1217,18 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       var mainScene = game.scene.getScene('MainScene');
       mainScene.players = this.players;
       this.socket = new _Socket__WEBPACK_IMPORTED_MODULE_2__["default"](mainScene);
-      mainScene.socket = this.socket; //debug
-      // window.Socket = Socket;
+      mainScene.socket = this.socket; // Set opponent screen
 
+      this.scene.pause();
+      this.scene.launch('SetOpponentScene', {
+        setPlaneScene: this
+      }); // setTimeout(() => {
+      //     this.scene.stop('SetOpponentScene');
+      //     this.scene.resume();
+      // }, 4000);
+      //debug
+
+      window.socket = this.socket;
       window.SetPlaneScene = this; // let cls = localStorage.getItem('lastPlaceCells').split(',');
       // this.drawByCells(cls);
     }

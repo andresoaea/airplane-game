@@ -30,3 +30,20 @@ button:focus {
 .game-preloader {
     background: #374aa9;
 }
+
+#game {
+    position: relative;
+
+    canvas {
+        position: absolute;
+    }
+}
+
+.scene-html {
+    background: rgba(0, 0, 0, 0.4);
+    & > div {
+        width: 70%;
+        height: 70%;
+        background: rgba(255, 255, 255, 0.95);
+    }
+}

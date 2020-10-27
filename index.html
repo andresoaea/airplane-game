@@ -21,6 +21,7 @@
 
         <script>
             function makeFull() {
+                if (screen.width > 1000) return;
                 document.querySelector('body').requestFullscreen();
                 document.querySelector('canvas').style.width = '100vw';
                 document.querySelector('canvas').style.height = '100vh';

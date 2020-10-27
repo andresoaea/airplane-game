@@ -1,7 +1,9 @@
+import { Game } from 'phaser';
+
 class Socket {
     constructor(scene) {
         this.scene = scene;
-        const url = `ws://192.168.0.105:8080/comm?playerId=${scene.players.player.id}&opponentId=${scene.players.opponent.id}`;
+        const url = `ws://192.168.0.105:8080/comm?playerId=${scene.players.player.id}`;
         const conn = new WebSocket(url);
 
         // //
@@ -25,6 +27,9 @@ class Socket {
         console.log(msg);
 
         switch (msg.action) {
+            case 'setMyRoom':
+                game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
+                break;
             case 'opponentDisconnected':
                 this.doOpponentDisconnected(msg);
                 break;

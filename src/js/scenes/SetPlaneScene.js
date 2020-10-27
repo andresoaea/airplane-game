@@ -57,8 +57,18 @@ class SetPlaneScene extends Phaser.Scene {
         this.socket = new Socket(mainScene);
         mainScene.socket = this.socket;
 
+        // Set opponent screen
+        this.scene.pause();
+        this.scene.launch('SetOpponentScene', {
+            setPlaneScene: this,
+        });
+        // setTimeout(() => {
+        //     this.scene.stop('SetOpponentScene');
+        //     this.scene.resume();
+        // }, 4000);
+
         //debug
-        // window.Socket = Socket;
+        window.socket = this.socket;
         window.SetPlaneScene = this;
 
         // let cls = localStorage.getItem('lastPlaceCells').split(',');

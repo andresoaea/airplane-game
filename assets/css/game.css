@@ -31099,6 +31099,24 @@ button:focus {
   background: #374aa9;
 }
 
+#game {
+  position: relative;
+}
+
+#game canvas {
+  position: absolute;
+}
+
+.scene-html {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.scene-html > div {
+  width: 70%;
+  height: 70%;
+  background: rgba(255, 255, 255, 0.95);
+}
+
 @media (min-width: 640px){
   .sm\:container{
     width: 100%;

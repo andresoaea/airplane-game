@@ -5,13 +5,14 @@ import Phaser from 'phaser';
 // window.moment = moment;
 // window.Swal = Swal;
 
-// //indow.jQuery = window.$ = require('jquery');
+window.jQuery = window.$ = require('jquery');
 window.axios = require('axios');
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 import LoadScene from './scenes/LoadScene';
 import MainScene from './scenes/MainScene';
 import SetPlaneScene from './scenes/SetPlaneScene';
+import SetOpponentScene from './scenes/SetOpponentScene';
 
 let config = {
     type: Phaser.AUTO,
@@ -34,5 +35,6 @@ let game = new Phaser.Game(config);
 game.scene.add('LoadScene', new LoadScene());
 game.scene.add('MainScene', new MainScene());
 game.scene.add('SetPlaneScene', new SetPlaneScene());
+game.scene.add('SetOpponentScene', new SetOpponentScene());
 game.scene.start('LoadScene');
 window.game = game;
