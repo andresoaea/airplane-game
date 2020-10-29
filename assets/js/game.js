@@ -665,9 +665,9 @@ __webpack_require__.r(__webpack_exports__);
 // window.moment = moment;
 // window.Swal = Swal;
 
-__webpack_provided_window_dot_jQuery = window.$ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
-window.axios = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+__webpack_provided_window_dot_jQuery = window.$ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js"); // window.axios = require('axios');
+// window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
 
 
 
@@ -677,16 +677,9 @@ var config = {
   width: 800,
   height: 458,
   parent: 'game',
-  // physics: {
-  //     default: 'arcade',
-  //     arcade: {
-  //         gravity: { y: 800 },
-  //         //debug: true
-  //     },
-  // },
   title: 'The Airplanes with Friends',
-  url: '',
-  version: '1.0.0'
+  version: '0.1.0',
+  url: ''
 };
 var game = new phaser__WEBPACK_IMPORTED_MODULE_0___default.a.Game(config);
 game.scene.add('LoadScene', new _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_1__["default"]());
@@ -1065,19 +1058,20 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function init(data) {
       this.setPlaneScene = data.setPlaneScene;
       this.events.on('shutdown', this.destroy, this);
+      this.randSceneId = Math.floor(Math.random() * 100000);
     }
   }, {
     key: "create",
     value: function create() {
-      var html = "\n            <div class=\"flex items-center rounded\">\n\n            <div class=\"flex w-full\">\n                <div class=\"flex flex-1 justify-center items-center flex-col\">\n                    <p class=\"text-gray-800 mb-2\">Create a room</p>\n                    <button id=\"createRoom\" class=\"bg-pink-700 px-4 py-2 text-white rounded\">Create</button>\n                </div> \n                <div class=\"flex flex-1 justify-center items-center flex-col\">\n                <p class=\"text-gray-800 mb-2\">Go to a room</p>\n                    <input id=\"roomId\" class=\"mb-2\" value=\"0000\" type=\"text\" />\n                    <button id=\"goToRoom\" class=\"bg-blue-700 px-4 py-2 text-white rounded\">Go play</button>\n                </div> \n\n            </div> \n\n            </div>\n        ";
+      var html = "\n            <div class=\"flex items-center rounded\">\n\n            <div class=\"flex w-full\">\n                <div class=\"col-create-room flex flex-1 justify-center items-center flex-col\">\n                    <p class=\"text-gray-800 mb-2\">Create a room</p>\n                    <button id=\"createRoom\" class=\"bg-pink-700 px-4 py-2 text-white rounded\">Create</button>\n                </div> \n                <div class=\"col-go-to-room flex flex-1 justify-center items-center flex-col\">\n                <p class=\"text-gray-800 mb-2\">Go to a room</p>\n                    <input id=\"roomId\" class=\"mb-2\" value=\"0000\" type=\"text\" />\n                    <button id=\"goToRoom\" class=\"bg-blue-700 px-4 py-2 text-white rounded\">Go play</button>\n                </div> \n\n            </div> \n\n            </div>\n        ";
       var el = document.createElement('div');
       el.innerHTML = html;
       el.style.width = $('canvas').width() + 'px';
       el.style.height = $('canvas').height() + 'px';
-      el.classList = 'scene-html absolute t-0 l-0 flex justify-center items-center';
+      el.classList = "scene-html scene-html-".concat(this.randSceneId, " absolute t-0 l-0 flex justify-center items-center");
       $('#game').append(el);
-      $('body').on('click', '#createRoom', this.getMyRoom.bind(this));
-      $('body').on('click', '#goToRoom', function () {
+      $('body').one('click', '#createRoom', this.getMyRoom.bind(this));
+      $('body').one('click', '#goToRoom', function () {
         console.log($('#roomId').val());
       });
     }
@@ -1092,13 +1086,28 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "showMyRoomId",
     value: function showMyRoomId(id) {
-      $('#createRoom').after("<h4>".concat(id, "</h4>")).remove();
+      var _this = this;
+
+      var $sceneHtml = $(".scene-html-".concat(this.randSceneId));
+      var $colCreateRoom = $sceneHtml.find('.col-create-room');
+      $sceneHtml.find('#createRoom').after("<h4>".concat(id, "</h4>")).remove();
+      $colCreateRoom.find('p').text('Your opponent can connect to this room code:');
+      $colCreateRoom.find('h4').after("\n                <small class=\"text-green-600 mt-2\">Waiting for opponent to connect...<small>\n                <button class=\"go-back bg-blue-400 block mx-auto mt-4 px-4 py-2 text-white rounded\">Go back</button>\n            ");
+      $sceneHtml.find('.col-go-to-room').hide();
+      $('body').one('click', '.go-back', function () {
+        _this.scene.restart(); // this.setPlaneScene.scene.launch('SetOpponentScene', {
+        //     setPlaneScene: this.setPlaneScene,
+        // });
+
+      });
     }
   }, {
     key: "destroy",
     value: function destroy() {
-      $('.scene-html').fadeOut(500, function () {
-        $('.scene-html').remove();
+      var $sceneHtml = $(".scene-html-".concat(this.randSceneId));
+      $('body').off();
+      $sceneHtml.fadeOut(500, function () {
+        $sceneHtml.remove();
         console.log('removed');
       });
     }

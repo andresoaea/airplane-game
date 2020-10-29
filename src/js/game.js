@@ -6,8 +6,8 @@ import Phaser from 'phaser';
 // window.Swal = Swal;
 
 window.jQuery = window.$ = require('jquery');
-window.axios = require('axios');
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+// window.axios = require('axios');
+// window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 import LoadScene from './scenes/LoadScene';
 import MainScene from './scenes/MainScene';
@@ -19,16 +19,9 @@ let config = {
     width: 800,
     height: 458,
     parent: 'game',
-    // physics: {
-    //     default: 'arcade',
-    //     arcade: {
-    //         gravity: { y: 800 },
-    //         //debug: true
-    //     },
-    // },
     title: 'The Airplanes with Friends',
+    version: '0.1.0',
     url: '',
-    version: '1.0.0',
 };
 
 let game = new Phaser.Game(config);
