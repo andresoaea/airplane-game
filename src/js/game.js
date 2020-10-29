@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 // import moment, { lang } from 'moment';
-// import Swal from 'sweetalert2';
+import Swal from 'sweetalert2';
 
 // window.moment = moment;
-// window.Swal = Swal;
+window.Swal = Swal;
 
 window.jQuery = window.$ = require('jquery');
 // window.axios = require('axios');

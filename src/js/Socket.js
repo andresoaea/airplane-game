@@ -30,6 +30,12 @@ class Socket {
             case 'setMyRoom':
                 game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
                 break;
+            case 'invalidRoom':
+                game.scene.getScene('SetOpponentScene').printInvalidRoom();
+                break;
+            case 'enterToRoom':
+                game.scene.getScene('SetOpponentScene').startRoom(msg.room);
+                break;
             case 'opponentDisconnected':
                 this.doOpponentDisconnected(msg);
                 break;

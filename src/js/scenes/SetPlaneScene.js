@@ -58,7 +58,7 @@ class SetPlaneScene extends Phaser.Scene {
         mainScene.socket = this.socket;
 
         // Set opponent screen
-        this.scene.pause();
+        // this.scene.pause();
         this.scene.launch('SetOpponentScene', {
             setPlaneScene: this,
         });

@@ -60,10 +60,10 @@ mix.sass('src/sass/game.scss', 'css/game.css').options({
     uglify: true,
 });
 
-// mix.browserSync({
-//     proxy: 'http://localhost/airplane',
-//     files: ['assets/css/*.*', 'assets/js/*.*', 'index.html'],
-// });
+mix.browserSync({
+    proxy: 'http://localhost/airplane',
+    files: ['assets/css/*.*', 'assets/js/*.*', 'index.html'],
+});
 
 //const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 // require('laravel-mix-purgecss');

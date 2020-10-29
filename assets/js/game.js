@@ -56,6 +56,14 @@ var Socket = /*#__PURE__*/function () {
           game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
           break;
 
+        case 'invalidRoom':
+          game.scene.getScene('SetOpponentScene').printInvalidRoom();
+          break;
+
+        case 'enterToRoom':
+          game.scene.getScene('SetOpponentScene').startRoom(msg.room);
+          break;
+
         case 'opponentDisconnected':
           this.doOpponentDisconnected(msg);
           break;
@@ -656,15 +664,17 @@ var Players = /*#__PURE__*/function () {
 __webpack_require__.r(__webpack_exports__);
 /* WEBPACK VAR INJECTION */(function(__webpack_provided_window_dot_jQuery) {/* harmony import */ var phaser__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! phaser */ "./node_modules/phaser/dist/phaser.js");
 /* harmony import */ var phaser__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(phaser__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./scenes/LoadScene */ "./src/js/scenes/LoadScene.js");
-/* harmony import */ var _scenes_MainScene__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./scenes/MainScene */ "./src/js/scenes/MainScene.js");
-/* harmony import */ var _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./scenes/SetPlaneScene */ "./src/js/scenes/SetPlaneScene.js");
-/* harmony import */ var _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./scenes/SetOpponentScene */ "./src/js/scenes/SetOpponentScene.js");
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./scenes/LoadScene */ "./src/js/scenes/LoadScene.js");
+/* harmony import */ var _scenes_MainScene__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./scenes/MainScene */ "./src/js/scenes/MainScene.js");
+/* harmony import */ var _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./scenes/SetPlaneScene */ "./src/js/scenes/SetPlaneScene.js");
+/* harmony import */ var _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./scenes/SetOpponentScene */ "./src/js/scenes/SetOpponentScene.js");
  // import moment, { lang } from 'moment';
-// import Swal from 'sweetalert2';
-// window.moment = moment;
-// window.Swal = Swal;
 
+ // window.moment = moment;
+
+window.Swal = sweetalert2__WEBPACK_IMPORTED_MODULE_1___default.a;
 __webpack_provided_window_dot_jQuery = window.$ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js"); // window.axios = require('axios');
 // window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
@@ -682,10 +692,10 @@ var config = {
   url: ''
 };
 var game = new phaser__WEBPACK_IMPORTED_MODULE_0___default.a.Game(config);
-game.scene.add('LoadScene', new _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_1__["default"]());
-game.scene.add('MainScene', new _scenes_MainScene__WEBPACK_IMPORTED_MODULE_2__["default"]());
-game.scene.add('SetPlaneScene', new _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_3__["default"]());
-game.scene.add('SetOpponentScene', new _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_4__["default"]());
+game.scene.add('LoadScene', new _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_2__["default"]());
+game.scene.add('MainScene', new _scenes_MainScene__WEBPACK_IMPORTED_MODULE_3__["default"]());
+game.scene.add('SetPlaneScene', new _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_4__["default"]());
+game.scene.add('SetOpponentScene', new _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_5__["default"]());
 game.scene.start('LoadScene');
 window.game = game;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
@@ -1056,6 +1066,7 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
   _createClass(SetOpponentScene, [{
     key: "init",
     value: function init(data) {
+      this.myRoom = null;
       this.setPlaneScene = data.setPlaneScene;
       this.events.on('shutdown', this.destroy, this);
       this.randSceneId = Math.floor(Math.random() * 100000);
@@ -1063,7 +1074,9 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "create",
     value: function create() {
-      var html = "\n            <div class=\"flex items-center rounded\">\n\n            <div class=\"flex w-full\">\n                <div class=\"col-create-room flex flex-1 justify-center items-center flex-col\">\n                    <p class=\"text-gray-800 mb-2\">Create a room</p>\n                    <button id=\"createRoom\" class=\"bg-pink-700 px-4 py-2 text-white rounded\">Create</button>\n                </div> \n                <div class=\"col-go-to-room flex flex-1 justify-center items-center flex-col\">\n                <p class=\"text-gray-800 mb-2\">Go to a room</p>\n                    <input id=\"roomId\" class=\"mb-2\" value=\"0000\" type=\"text\" />\n                    <button id=\"goToRoom\" class=\"bg-blue-700 px-4 py-2 text-white rounded\">Go play</button>\n                </div> \n\n            </div> \n\n            </div>\n        ";
+      var _this = this;
+
+      var html = "\n            <div class=\"flex items-center rounded\">\n                <div class=\"flex w-full\">\n                    <div class=\"col-create-room flex flex-1 justify-center items-center flex-col\">\n                        <p class=\"text-gray-800 mb-2\">Create a room</p>\n                        <button id=\"createRoom\" class=\"bg-pink-700 px-4 py-2 text-white rounded\">Create</button>\n                    </div> \n                    <div class=\"col-go-to-room flex flex-1 justify-center items-center flex-col\">\n                    <p class=\"text-gray-800 mb-2\">Go to a room</p>\n                        <input id=\"roomId\" class=\"mb-2\" value=\"0000\" type=\"text\" />\n                        <button id=\"goToRoom\" class=\"bg-blue-700 px-4 py-2 text-white rounded\">Go play</button>\n                    </div> \n                </div> \n            </div>\n        ";
       var el = document.createElement('div');
       el.innerHTML = html;
       el.style.width = $('canvas').width() + 'px';
@@ -1071,8 +1084,15 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
       el.classList = "scene-html scene-html-".concat(this.randSceneId, " absolute t-0 l-0 flex justify-center items-center");
       $('#game').append(el);
       $('body').one('click', '#createRoom', this.getMyRoom.bind(this));
-      $('body').one('click', '#goToRoom', function () {
-        console.log($('#roomId').val());
+      $('body').on('click', '#goToRoom', function () {
+        var roomToGo = $('#roomId').val();
+        var $sceneHtml = $(".scene-html-".concat(_this.randSceneId));
+        if ($sceneHtml.find('.room-error').length > 0) return; //  console.log(roomToGo);
+
+        _this.setPlaneScene.socket.send({
+          action: 'goToRoom',
+          room: roomToGo
+        });
       });
     }
   }, {
@@ -1086,8 +1106,9 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "showMyRoomId",
     value: function showMyRoomId(id) {
-      var _this = this;
+      var _this2 = this;
 
+      this.myRoom = id;
       var $sceneHtml = $(".scene-html-".concat(this.randSceneId));
       var $colCreateRoom = $sceneHtml.find('.col-create-room');
       $sceneHtml.find('#createRoom').after("<h4>".concat(id, "</h4>")).remove();
@@ -1095,11 +1116,52 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
       $colCreateRoom.find('h4').after("\n                <small class=\"text-green-600 mt-2\">Waiting for opponent to connect...<small>\n                <button class=\"go-back bg-blue-400 block mx-auto mt-4 px-4 py-2 text-white rounded\">Go back</button>\n            ");
       $sceneHtml.find('.col-go-to-room').hide();
       $('body').one('click', '.go-back', function () {
-        _this.scene.restart(); // this.setPlaneScene.scene.launch('SetOpponentScene', {
+        _this2.scene.restart(); // this.setPlaneScene.scene.launch('SetOpponentScene', {
         //     setPlaneScene: this.setPlaneScene,
         // });
 
       });
+    } // Called from Socket class
+
+  }, {
+    key: "printInvalidRoom",
+    value: function printInvalidRoom() {
+      var $sceneHtml = $(".scene-html-".concat(this.randSceneId));
+      $sceneHtml.find('.col-go-to-room').append("\n            <div class=\"room-error hidden text-center mt-2\">\n                <p class=\"text-red-600\">Invalid room code..</p>\n                <p class=\"text-red-600 text-xs\">Try again with another code.</p>\n            </div>\n        ");
+      $sceneHtml.find('.room-error').fadeIn();
+      setTimeout(function () {
+        $sceneHtml.find('.room-error').fadeOut(400, function () {
+          $(this).remove();
+        });
+      }, 2000);
+    }
+  }, {
+    key: "printOpponentConnected",
+    value: function printOpponentConnected() {
+      var _this3 = this;
+
+      Swal.fire({
+        title: "Let's go!",
+        text: 'Opponent connected',
+        icon: 'success',
+        showConfirmButton: false,
+        timer: 2000
+      }).then(function () {
+        console.log('execute then');
+
+        _this3.scene.stop();
+      });
+    }
+  }, {
+    key: "startRoom",
+    value: function startRoom(id) {
+      if (this.myRoom && this.myRoom == id) {
+        // This is the room initiator player
+        this.printOpponentConnected();
+      } else {
+        // This is the opponent
+        this.scene.stop();
+      }
     }
   }, {
     key: "destroy",
@@ -1227,8 +1289,8 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       mainScene.players = this.players;
       this.socket = new _Socket__WEBPACK_IMPORTED_MODULE_2__["default"](mainScene);
       mainScene.socket = this.socket; // Set opponent screen
+      // this.scene.pause();
 
-      this.scene.pause();
       this.scene.launch('SetOpponentScene', {
         setPlaneScene: this
       }); // setTimeout(() => {

@@ -6,29 +6,26 @@ class SetOpponentScene extends Phaser.Scene {
     }
 
     init(data) {
+        this.myRoom = null;
         this.setPlaneScene = data.setPlaneScene;
         this.events.on('shutdown', this.destroy, this);
-
         this.randSceneId = Math.floor(Math.random() * 100000);
     }
 
     create() {
         const html = `
             <div class="flex items-center rounded">
-
-            <div class="flex w-full">
-                <div class="col-create-room flex flex-1 justify-center items-center flex-col">
-                    <p class="text-gray-800 mb-2">Create a room</p>
-                    <button id="createRoom" class="bg-pink-700 px-4 py-2 text-white rounded">Create</button>
+                <div class="flex w-full">
+                    <div class="col-create-room flex flex-1 justify-center items-center flex-col">
+                        <p class="text-gray-800 mb-2">Create a room</p>
+                        <button id="createRoom" class="bg-pink-700 px-4 py-2 text-white rounded">Create</button>
+                    </div> 
+                    <div class="col-go-to-room flex flex-1 justify-center items-center flex-col">
+                    <p class="text-gray-800 mb-2">Go to a room</p>
+                        <input id="roomId" class="mb-2" value="0000" type="text" />
+                        <button id="goToRoom" class="bg-blue-700 px-4 py-2 text-white rounded">Go play</button>
+                    </div> 
                 </div> 
-                <div class="col-go-to-room flex flex-1 justify-center items-center flex-col">
-                <p class="text-gray-800 mb-2">Go to a room</p>
-                    <input id="roomId" class="mb-2" value="0000" type="text" />
-                    <button id="goToRoom" class="bg-blue-700 px-4 py-2 text-white rounded">Go play</button>
-                </div> 
-
-            </div> 
-
             </div>
         `;
 
@@ -40,8 +37,16 @@ class SetOpponentScene extends Phaser.Scene {
         $('#game').append(el);
 
         $('body').one('click', '#createRoom', this.getMyRoom.bind(this));
-        $('body').one('click', '#goToRoom', () => {
-            console.log($('#roomId').val());
+        $('body').on('click', '#goToRoom', () => {
+            const roomToGo = $('#roomId').val();
+            const $sceneHtml = $(`.scene-html-${this.randSceneId}`);
+            if ($sceneHtml.find('.room-error').length > 0) return;
+
+            //  console.log(roomToGo);
+            this.setPlaneScene.socket.send({
+                action: 'goToRoom',
+                room: roomToGo,
+            });
         });
     }
 
@@ -53,6 +58,8 @@ class SetOpponentScene extends Phaser.Scene {
 
     // Called from Socket class on message received from server
     showMyRoomId(id) {
+        this.myRoom = id;
+
         const $sceneHtml = $(`.scene-html-${this.randSceneId}`);
         const $colCreateRoom = $sceneHtml.find('.col-create-room');
 
@@ -78,6 +85,48 @@ class SetOpponentScene extends Phaser.Scene {
             //     setPlaneScene: this.setPlaneScene,
             // });
         });
+    }
+
+    // Called from Socket class
+    printInvalidRoom() {
+        const $sceneHtml = $(`.scene-html-${this.randSceneId}`);
+        $sceneHtml.find('.col-go-to-room').append(`
+            <div class="room-error hidden text-center mt-2">
+                <p class="text-red-600">Invalid room code..</p>
+                <p class="text-red-600 text-xs">Try again with another code.</p>
+            </div>
+        `);
+
+        $sceneHtml.find('.room-error').fadeIn();
+
+        setTimeout(() => {
+            $sceneHtml.find('.room-error').fadeOut(400, function() {
+                $(this).remove();
+            });
+        }, 2000);
+    }
+
+    printOpponentConnected() {
+        Swal.fire({
+            title: "Let's go!",
+            text: 'Opponent connected',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 2000,
+        }).then(() => {
+            console.log('execute then');
+            this.scene.stop();
+        });
+    }
+
+    startRoom(id) {
+        if (this.myRoom && this.myRoom == id) {
+            // This is the room initiator player
+            this.printOpponentConnected();
+        } else {
+            // This is the opponent
+            this.scene.stop();
+        }
     }
 
     destroy() {
