@@ -67,11 +67,21 @@ class Socket {
         const cellId = msg.cellClicked;
         if (!cellId) return;
 
-        const graphics = this.scene.add.graphics({
-            fillStyle: { color: 0x0000ff },
-        });
+        const rect = this.scene.cells[cellId.replace('p', 'o')].rect;
 
-        graphics.fillRectShape(this.scene.cells[cellId.replace('p', 'o')].rect);
+        if (this.scene.myPlanesCells.includes(cellId.replace('p', ''))) {
+            // Targeted point
+            this.scene.add.image(rect.centerX, rect.centerY, 'fire');
+        } else {
+            // Missed point
+            this.scene.add.image(rect.centerX, rect.centerY, 'x');
+        }
+
+        // const graphics = this.scene.add.graphics({
+        //     fillStyle: { color },
+        // });
+
+        // graphics.fillRectShape(this.scene.cells[cellId.replace('p', 'o')].rect);
     }
 
     doOpponentDisconnected(msg) {

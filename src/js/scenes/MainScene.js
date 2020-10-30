@@ -5,11 +5,6 @@ class MainScene extends Phaser.Scene {
     constructor() {
         super({
             key: 'MainScene',
-            physics: {
-                arcade: {
-                    //debug: true,
-                },
-            },
         });
 
         this.cells = {};
@@ -18,13 +13,14 @@ class MainScene extends Phaser.Scene {
 
     init(data) {
         this.myPlanesCells = data.planesData.cells;
+        console.log(this.myPlanesCells);
         // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
         this.cameras.main.setBackgroundColor('#fff');
     }
 
     //debug
     drawByCells(cells) {
-        // console.log(this.cells);
+        //console.log(this.cells);
 
         cells.forEach((cl) => {
             //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
@@ -41,12 +37,12 @@ class MainScene extends Phaser.Scene {
         this.playersComponent = new Players(this);
         //this.game.scene.getScene('SetPlaneScene').players.opponent
 
-        // this.socket.sendOnConnect({
-        //     action: 'setOpponentData',
-        //     opponentData: {
-        //         planesCells: this.myPlanesCells,
-        //     },
-        // });
+        this.socket.send({
+            action: 'setOpponentData',
+            opponentData: {
+                planesCells: this.myPlanesCells,
+            },
+        });
 
         this.drawPlayerMap(40, 80);
         this.drawPlayerMap(440, 80, 'opponent');
@@ -103,12 +99,16 @@ class MainScene extends Phaser.Scene {
                 cellClicked: id,
             });
 
-            // console.log(graphics.getData('id'));
-            graphics = this.add.graphics({
-                fillStyle: { color: 0x0000ff },
-            });
-
-            graphics.fillRectShape(rect);
+            if (this.opponentData.planesCells.includes(`${j + 1}${i + 1}`)) {
+                // Targeted point
+                graphics = this.add.graphics({
+                    fillStyle: { color: 0x000000 },
+                });
+                graphics.fillRectShape(rect);
+            } else {
+                // Missed point
+                this.add.image(rect.centerX, rect.centerY, 'x');
+            }
         });
     }
 

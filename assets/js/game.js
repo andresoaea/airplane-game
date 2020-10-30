@@ -166,12 +166,19 @@ var Socket = /*#__PURE__*/function () {
     value: function doAttack(msg) {
       var cellId = msg.cellClicked;
       if (!cellId) return;
-      var graphics = this.scene.add.graphics({
-        fillStyle: {
-          color: 0x0000ff
-        }
-      });
-      graphics.fillRectShape(this.scene.cells[cellId.replace('p', 'o')].rect);
+      var rect = this.scene.cells[cellId.replace('p', 'o')].rect;
+
+      if (this.scene.myPlanesCells.includes(cellId.replace('p', ''))) {
+        // Targeted point
+        this.scene.add.image(rect.centerX, rect.centerY, 'fire');
+      } else {
+        // Missed point
+        this.scene.add.image(rect.centerX, rect.centerY, 'x');
+      } // const graphics = this.scene.add.graphics({
+      //     fillStyle: { color },
+      // });
+      // graphics.fillRectShape(this.scene.cells[cellId.replace('p', 'o')].rect);
+
     }
   }, {
     key: "doOpponentDisconnected",
@@ -892,6 +899,8 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.load.image('player', game.gameData.players.player.photo);
       this.load.image('play-btn', 'assets/images/play-btn.png');
       this.load.image('btn-start-game', 'assets/images/btn-start-game.png');
+      this.load.image('x', 'assets/images/x.png');
+      this.load.image('fire', 'assets/images/fire.png');
       this.load.image('plane-1', 'assets/images/planes/plane-1.png');
       this.load.image('plane-2', 'assets/images/planes/plane-2.png');
       this.showPreloader();
@@ -1006,11 +1015,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
     _classCallCheck(this, MainScene);
 
     _this = _super.call(this, {
-      key: 'MainScene',
-      physics: {
-        arcade: {//debug: true,
-        }
-      }
+      key: 'MainScene'
     });
     _this.cells = {};
     _this.opponentData = {}; // it is set on Socket class
@@ -1021,7 +1026,8 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   _createClass(MainScene, [{
     key: "init",
     value: function init(data) {
-      this.myPlanesCells = data.planesData.cells; // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
+      this.myPlanesCells = data.planesData.cells;
+      console.log(this.myPlanesCells); // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
 
       this.cameras.main.setBackgroundColor('#fff');
     } //debug
@@ -1031,7 +1037,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function drawByCells(cells) {
       var _this2 = this;
 
-      // console.log(this.cells);
+      //console.log(this.cells);
       cells.forEach(function (cl) {
         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
         var graphics = _this2.add.graphics({
@@ -1049,13 +1055,13 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function create() {
       this.drawSceneBackground();
       this.playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_0__["default"](this); //this.game.scene.getScene('SetPlaneScene').players.opponent
-      // this.socket.sendOnConnect({
-      //     action: 'setOpponentData',
-      //     opponentData: {
-      //         planesCells: this.myPlanesCells,
-      //     },
-      // });
 
+      this.socket.send({
+        action: 'setOpponentData',
+        opponentData: {
+          planesCells: this.myPlanesCells
+        }
+      });
       this.drawPlayerMap(40, 80);
       this.drawPlayerMap(440, 80, 'opponent'); //debug
       //window.Socket = Socket;
@@ -1106,15 +1112,20 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
         _this3.socket.send({
           action: 'attack',
           cellClicked: id
-        }); // console.log(graphics.getData('id'));
-
-
-        graphics = _this3.add.graphics({
-          fillStyle: {
-            color: 0x0000ff
-          }
         });
-        graphics.fillRectShape(rect);
+
+        if (_this3.opponentData.planesCells.includes("".concat(j + 1).concat(i + 1))) {
+          // Targeted point
+          graphics = _this3.add.graphics({
+            fillStyle: {
+              color: 0x000000
+            }
+          });
+          graphics.fillRectShape(rect);
+        } else {
+          // Missed point
+          _this3.add.image(rect.centerX, rect.centerY, 'x');
+        }
       });
     }
   }, {
