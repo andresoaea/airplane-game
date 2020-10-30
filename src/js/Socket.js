@@ -1,9 +1,8 @@
-import { Game } from 'phaser';
-
 class Socket {
-    constructor(scene) {
-        this.scene = scene;
-        const url = `ws://192.168.0.105:8080/comm?playerId=${scene.players.player.id}`;
+    constructor() {
+        this.scene = game.scene.getScene('MainScene');
+        const queryString = $.param(game.gameData.players.player);
+        const url = `ws://192.168.0.105:8080/comm?${queryString}`;
         const conn = new WebSocket(url);
 
         // //
@@ -20,6 +19,17 @@ class Socket {
             const msg = JSON.parse(e.data);
             this.handleReceivedMessage(msg);
         };
+
+        conn.onerror = () => {
+            Swal.fire({
+                title: 'Ouups!',
+                text:
+                    "We can't connect to the server now. Please try again later.",
+                icon: 'error',
+                showConfirmButton: false,
+                //timer: 2000,
+            });
+        };
     }
 
     handleReceivedMessage(msg) {
@@ -34,6 +44,7 @@ class Socket {
                 game.scene.getScene('SetOpponentScene').printInvalidRoom();
                 break;
             case 'enterToRoom':
+                game.gameData.setOpponent(msg.opponent);
                 game.scene.getScene('SetOpponentScene').startRoom(msg.room);
                 break;
             case 'opponentDisconnected':

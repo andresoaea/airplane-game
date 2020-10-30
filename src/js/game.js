@@ -11,6 +11,7 @@ window.jQuery = window.$ = require('jquery');
 
 import LoadScene from './scenes/LoadScene';
 import MainScene from './scenes/MainScene';
+import StartScene from './scenes/StartScene';
 import SetPlaneScene from './scenes/SetPlaneScene';
 import SetOpponentScene from './scenes/SetOpponentScene';
 
@@ -27,6 +28,7 @@ let config = {
 let game = new Phaser.Game(config);
 game.scene.add('LoadScene', new LoadScene());
 game.scene.add('MainScene', new MainScene());
+game.scene.add('StartScene', new StartScene());
 game.scene.add('SetPlaneScene', new SetPlaneScene());
 game.scene.add('SetOpponentScene', new SetOpponentScene());
 game.scene.start('LoadScene');

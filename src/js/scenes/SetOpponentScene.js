@@ -14,7 +14,7 @@ class SetOpponentScene extends Phaser.Scene {
 
     create() {
         const html = `
-            <div class="flex items-center rounded">
+            <div class="flex items-center rounded animate__animated animate__backInDown">
                 <div class="flex w-full">
                     <div class="col-create-room flex flex-1 justify-center items-center flex-col">
                         <p class="text-gray-800 mb-2">Create a room</p>
@@ -33,7 +33,7 @@ class SetOpponentScene extends Phaser.Scene {
         el.innerHTML = html;
         el.style.width = $('canvas').width() + 'px';
         el.style.height = $('canvas').height() + 'px';
-        el.classList = `scene-html scene-html-${this.randSceneId} absolute t-0 l-0 flex justify-center items-center`;
+        el.classList = `scene-html scene-html-${this.randSceneId} absolute t-0 l-0 flex justify-center items-center animate__animated animate__fadeIn`;
         $('#game').append(el);
 
         $('body').one('click', '#createRoom', this.getMyRoom.bind(this));

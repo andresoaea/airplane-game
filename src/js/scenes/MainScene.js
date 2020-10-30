@@ -38,6 +38,9 @@ class MainScene extends Phaser.Scene {
     create() {
         this.drawSceneBackground();
 
+        this.playersComponent = new Players(this);
+        //this.game.scene.getScene('SetPlaneScene').players.opponent
+
         // this.socket.sendOnConnect({
         //     action: 'setOpponentData',
         //     opponentData: {

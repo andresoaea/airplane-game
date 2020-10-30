@@ -26,8 +26,8 @@ class SetPlaneScene extends Phaser.Scene {
     create() {
         this.drawSceneBackground();
 
-        // Setup players
-        this.players = new Players();
+        // // Setup players
+        //this.players = new Players(this);
 
         const x = 120;
         const y = 80;
@@ -53,15 +53,24 @@ class SetPlaneScene extends Phaser.Scene {
         this.addStartGame();
 
         let mainScene = game.scene.getScene('MainScene');
-        mainScene.players = this.players;
-        this.socket = new Socket(mainScene);
+        // mainScene.players = new Players(mainScene);
+        this.socket = new Socket();
         mainScene.socket = this.socket;
 
         // Set opponent screen
-        // this.scene.pause();
-        this.scene.launch('SetOpponentScene', {
-            setPlaneScene: this,
-        });
+        // this.scene.stop();
+
+        //new Players(this);
+
+        this.scene
+            .launch('StartScene', {
+                setPlaneScene: this,
+            })
+            .bringToTop('StartScene');
+        // this.scene.launch('SetOpponentScene', {
+        //     setPlaneScene: this,
+        // });
+
         // setTimeout(() => {
         //     this.scene.stop('SetOpponentScene');
         //     this.scene.resume();

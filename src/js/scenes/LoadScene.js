@@ -1,8 +1,14 @@
+import GameData from '../GameData';
+
 class LoadScene extends Phaser.Scene {
     constructor() {
         super({
             key: 'LoadScene',
         });
+    }
+
+    init() {
+        game.gameData = new GameData();
     }
 
     preload() {
@@ -16,7 +22,11 @@ class LoadScene extends Phaser.Scene {
         //     'assets/sprites/tp'
         // );
 
+        this.load.image('player', game.gameData.players.player.photo);
+
+        this.load.image('play-btn', 'assets/images/play-btn.png');
         this.load.image('btn-start-game', 'assets/images/btn-start-game.png');
+
         this.load.image('plane-1', 'assets/images/planes/plane-1.png');
         this.load.image('plane-2', 'assets/images/planes/plane-2.png');
 
