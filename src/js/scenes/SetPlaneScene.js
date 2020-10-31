@@ -67,6 +67,10 @@ class SetPlaneScene extends Phaser.Scene {
                 setPlaneScene: this,
             })
             .bringToTop('StartScene');
+
+        //
+        //
+        ///
         // this.scene.launch('SetOpponentScene', {
         //     setPlaneScene: this,
         // });
@@ -108,10 +112,13 @@ class SetPlaneScene extends Phaser.Scene {
                     ];
                 }
 
+                //console.log(this.planes);
+
                 this.scene.stop();
                 this.scene.start('MainScene', {
                     planesData: {
                         cells: allPlanesCells,
+                        planes: this.planes,
                     },
                 });
             });

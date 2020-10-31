@@ -42,6 +42,8 @@ class SetOpponentScene extends Phaser.Scene {
             const $sceneHtml = $(`.scene-html-${this.randSceneId}`);
             if ($sceneHtml.find('.room-error').length > 0) return;
 
+            game.gameData.turn.setIsMyTurn(false);
+
             //  console.log(roomToGo);
             this.setPlaneScene.socket.send({
                 action: 'goToRoom',

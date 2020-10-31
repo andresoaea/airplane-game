@@ -1,4 +1,5 @@
 import Players from './components/Players';
+import Turn from './components/Turn';
 
 class GameData {
     constructor() {
@@ -11,6 +12,8 @@ class GameData {
                 photo: `assets/images/profile-${imageNum}.jpg`,
             },
         };
+
+        this.turn = new Turn();
     }
 
     // Called from Socket class

@@ -8,30 +8,33 @@ class MainScene extends Phaser.Scene {
         });
 
         this.cells = {};
-        this.opponentData = {}; // it is set on Socket class
+        this.opponentData = {}; // it is set on Socket class when msg is received from opponent
     }
 
     init(data) {
         this.myPlanesCells = data.planesData.cells;
-        console.log(this.myPlanesCells);
+        this.myPlanes = data.planesData.planes;
+        //console.log(this.myPlanesCells);
         // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
         this.cameras.main.setBackgroundColor('#fff');
     }
 
     //debug
-    drawByCells(cells) {
-        //console.log(this.cells);
+    // drawByCells(cells) {
+    //     //console.log(this.cells);
 
-        cells.forEach((cl) => {
-            //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-            var graphics = this.add.graphics({
-                lineStyle: { width: 3, color: 0x000000 },
-            });
-            graphics.strokeRectShape(this.cells[`o${cl}`].rect);
-        });
-    }
+    //     cells.forEach((cl) => {
+    //         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //         var graphics = this.add.graphics({
+    //             lineStyle: { width: 3, color: 0x000000 },
+    //         });
+    //         graphics.strokeRectShape(this.cells[`o${cl}`].rect);
+    //     });
+    // }
 
     create() {
+        console.log('main create');
+
         this.drawSceneBackground();
 
         this.playersComponent = new Players(this);
@@ -47,10 +50,28 @@ class MainScene extends Phaser.Scene {
         this.drawPlayerMap(40, 80);
         this.drawPlayerMap(440, 80, 'opponent');
 
+        this.drawPlanes();
+
+        this.turn = game.gameData.turn;
+        this.turn.setScene(this);
+
+        //console.log(this.turn);
+
         //debug
         //window.Socket = Socket;
         window.MainScene = this;
-        this.drawByCells(this.myPlanesCells);
+        // this.drawByCells(this.myPlanesCells);
+    }
+
+    drawPlanes() {
+        // console.log(this.myPlanes);
+        Object.keys(this.myPlanes).forEach((planeKey) => {
+            const playerMapLeftDiff = 2 * 40; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
+            const plane = this.myPlanes[planeKey].instance;
+            const planeImage = this.add
+                .image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key)
+                .setAngle(plane.angle);
+        });
     }
 
     drawPlayerMap(x, y, type = null) {
@@ -94,6 +115,17 @@ class MainScene extends Phaser.Scene {
         graphics.on('pointerdown', () => {
             if (type !== 'opponent') return;
 
+            if ($.isEmptyObject(this.opponentData)) {
+                console.log('opponent not ready yet');
+                return;
+            }
+
+            if (!this.turn.isMyTurn) {
+                console.log('not my turn');
+                game.gameData.turn.scaleText();
+                return;
+            }
+
             this.socket.send({
                 action: 'attack',
                 cellClicked: id,
@@ -107,8 +139,10 @@ class MainScene extends Phaser.Scene {
                 graphics.fillRectShape(rect);
             } else {
                 // Missed point
-                this.add.image(rect.centerX, rect.centerY, 'x');
+                this.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
             }
+
+            game.gameData.turn.reverse();
         });
     }
 

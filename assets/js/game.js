@@ -10,11 +10,13 @@
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/Players */ "./src/js/components/Players.js");
+/* harmony import */ var _components_Turn__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/Turn */ "./src/js/components/Turn.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
 
 
 
@@ -33,6 +35,7 @@ var GameData = /*#__PURE__*/function () {
         photo: "assets/images/profile-".concat(imageNum, ".jpg")
       }
     };
+    this.turn = new _components_Turn__WEBPACK_IMPORTED_MODULE_1__["default"]();
   } // Called from Socket class
 
 
@@ -95,12 +98,10 @@ var Socket = /*#__PURE__*/function () {
     this.scene = game.scene.getScene('MainScene');
     var queryString = $.param(game.gameData.players.player);
     var url = "ws://192.168.0.105:8080/comm?".concat(queryString);
-    var conn = new WebSocket(url); // //
-    // this.toSend = null;
-    // //
+    var conn = new WebSocket(url);
 
     conn.onopen = function (e) {
-      console.log("Connection established to ".concat(url)); // this.send(this.toSend);
+      console.log("Connection established to ".concat(url));
     };
 
     this.conn = conn;
@@ -117,8 +118,7 @@ var Socket = /*#__PURE__*/function () {
         title: 'Ouups!',
         text: "We can't connect to the server now. Please try again later.",
         icon: 'error',
-        showConfirmButton: false //timer: 2000,
-
+        showConfirmButton: false
       });
     };
   }
@@ -132,6 +132,7 @@ var Socket = /*#__PURE__*/function () {
       switch (msg.action) {
         case 'setMyRoom':
           game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
+          game.gameData.turn.setIsMyTurn(true);
           break;
 
         case 'invalidRoom':
@@ -149,6 +150,7 @@ var Socket = /*#__PURE__*/function () {
 
         case 'attack':
           this.doAttack(msg);
+          game.gameData.turn.reverse();
           break;
 
         case 'setOpponentData':
@@ -170,10 +172,10 @@ var Socket = /*#__PURE__*/function () {
 
       if (this.scene.myPlanesCells.includes(cellId.replace('p', ''))) {
         // Targeted point
-        this.scene.add.image(rect.centerX, rect.centerY, 'fire');
+        this.scene.add.image(rect.centerX, rect.centerY, 'fire').setScale(0.8);
       } else {
         // Missed point
-        this.scene.add.image(rect.centerX, rect.centerY, 'x');
+        this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
       } // const graphics = this.scene.add.graphics({
       //     fillStyle: { color },
       // });
@@ -192,10 +194,7 @@ var Socket = /*#__PURE__*/function () {
     value: function send(msg) {
       if (this.conn.readyState === WebSocket.CLOSED) return;
       return this.conn.send(JSON.stringify(msg));
-    } // sendOnConnect(msg) {
-    //     this.toSend = msg;
-    // }
-
+    }
   }]);
 
   return Socket;
@@ -781,6 +780,111 @@ var Players = /*#__PURE__*/function () {
 
 /***/ }),
 
+/***/ "./src/js/components/Turn.js":
+/*!***********************************!*\
+  !*** ./src/js/components/Turn.js ***!
+  \***********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Turn = /*#__PURE__*/function () {
+  function Turn() {
+    _classCallCheck(this, Turn);
+
+    this.text = null;
+    this.isMyTurn = false; // used in Mainscene to allow/disallow clicking on cells
+  }
+
+  _createClass(Turn, [{
+    key: "setScene",
+    value: function setScene(scene) {
+      this.scene = scene;
+      this.printTurnText();
+      this.updateTurnText();
+    }
+  }, {
+    key: "setIsMyTurn",
+    value: function setIsMyTurn(bool) {
+      this.isMyTurn = bool;
+    }
+  }, {
+    key: "reverse",
+    value: function reverse() {
+      this.isMyTurn = !this.isMyTurn;
+      this.updateTurnText();
+    }
+  }, {
+    key: "getTurnText",
+    value: function getTurnText() {
+      return this.isMyTurn ? 'Your turn' : 'Opponent turn. Please wait..';
+    }
+  }, {
+    key: "printTurnText",
+    value: function printTurnText() {
+      this.text = this.scene.add.text(game.config.width / 2, 36, this.getTurnText(), {
+        color: '#fff',
+        fontFamily: 'Righteous',
+        stroke: 'rgba(0,0,0,.6)',
+        strokeThickness: 1,
+        fontSize: '16px'
+      }).setOrigin(0.5).setDepth(4);
+    }
+  }, {
+    key: "updateTurnText",
+    value: function updateTurnText() {
+      var _this = this;
+
+      setTimeout(function () {
+        var color = _this.isMyTurn ? '#0a9c00' : '#f79e0f';
+
+        _this.text.setText(_this.getTurnText()).setColor(color);
+
+        var tween = _this.scene.tweens.add({
+          targets: [_this.text],
+          scaleX: 1.5,
+          scaleY: 1.5,
+          duration: 400,
+          yoyo: true,
+          onComplete: function onComplete() {
+            _this.text.setColor('#fff');
+          }
+        });
+      }, 400);
+    }
+  }, {
+    key: "scaleText",
+    value: function scaleText() {
+      var _this2 = this;
+
+      this.text.setText(this.getTurnText()).setColor('#f79e0f');
+      var tween = this.scene.tweens.add({
+        targets: [this.text],
+        scaleX: 1.5,
+        scaleY: 1.5,
+        duration: 400,
+        yoyo: true,
+        onComplete: function onComplete() {
+          _this2.text.setColor('#fff');
+        }
+      });
+    }
+  }]);
+
+  return Turn;
+}();
+
+/* harmony default export */ __webpack_exports__["default"] = (Turn);
+
+/***/ }),
+
 /***/ "./src/js/game.js":
 /*!************************!*\
   !*** ./src/js/game.js ***!
@@ -978,7 +1082,7 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1018,7 +1122,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
       key: 'MainScene'
     });
     _this.cells = {};
-    _this.opponentData = {}; // it is set on Socket class
+    _this.opponentData = {}; // it is set on Socket class when msg is received from opponent
 
     return _this;
   }
@@ -1027,32 +1131,26 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
     key: "init",
     value: function init(data) {
       this.myPlanesCells = data.planesData.cells;
-      console.log(this.myPlanesCells); // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
+      this.myPlanes = data.planesData.planes; //console.log(this.myPlanesCells);
+      // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
 
       this.cameras.main.setBackgroundColor('#fff');
     } //debug
+    // drawByCells(cells) {
+    //     //console.log(this.cells);
+    //     cells.forEach((cl) => {
+    //         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //         var graphics = this.add.graphics({
+    //             lineStyle: { width: 3, color: 0x000000 },
+    //         });
+    //         graphics.strokeRectShape(this.cells[`o${cl}`].rect);
+    //     });
+    // }
 
-  }, {
-    key: "drawByCells",
-    value: function drawByCells(cells) {
-      var _this2 = this;
-
-      //console.log(this.cells);
-      cells.forEach(function (cl) {
-        //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-        var graphics = _this2.add.graphics({
-          lineStyle: {
-            width: 3,
-            color: 0x000000
-          }
-        });
-
-        graphics.strokeRectShape(_this2.cells["o".concat(cl)].rect);
-      });
-    }
   }, {
     key: "create",
     value: function create() {
+      console.log('main create');
       this.drawSceneBackground();
       this.playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_0__["default"](this); //this.game.scene.getScene('SetPlaneScene').players.opponent
 
@@ -1063,11 +1161,28 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
         }
       });
       this.drawPlayerMap(40, 80);
-      this.drawPlayerMap(440, 80, 'opponent'); //debug
+      this.drawPlayerMap(440, 80, 'opponent');
+      this.drawPlanes();
+      this.turn = game.gameData.turn;
+      this.turn.setScene(this); //console.log(this.turn);
+      //debug
       //window.Socket = Socket;
 
-      window.MainScene = this;
-      this.drawByCells(this.myPlanesCells);
+      window.MainScene = this; // this.drawByCells(this.myPlanesCells);
+    }
+  }, {
+    key: "drawPlanes",
+    value: function drawPlanes() {
+      var _this2 = this;
+
+      // console.log(this.myPlanes);
+      Object.keys(this.myPlanes).forEach(function (planeKey) {
+        var playerMapLeftDiff = 2 * 40; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
+
+        var plane = _this2.myPlanes[planeKey].instance;
+
+        var planeImage = _this2.add.image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key).setAngle(plane.angle);
+      });
     }
   }, {
     key: "drawPlayerMap",
@@ -1109,6 +1224,17 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
       graphics.on('pointerdown', function () {
         if (type !== 'opponent') return;
 
+        if ($.isEmptyObject(_this3.opponentData)) {
+          console.log('opponent not ready yet');
+          return;
+        }
+
+        if (!_this3.turn.isMyTurn) {
+          console.log('not my turn');
+          game.gameData.turn.scaleText();
+          return;
+        }
+
         _this3.socket.send({
           action: 'attack',
           cellClicked: id
@@ -1124,8 +1250,10 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
           graphics.fillRectShape(rect);
         } else {
           // Missed point
-          _this3.add.image(rect.centerX, rect.centerY, 'x');
+          _this3.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
         }
+
+        game.gameData.turn.reverse();
       });
     }
   }, {
@@ -1163,6 +1291,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 }(Phaser.Scene);
 
 /* harmony default export */ __webpack_exports__["default"] = (MainScene);
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
 
 /***/ }),
 
@@ -1234,7 +1363,8 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
       $('body').on('click', '#goToRoom', function () {
         var roomToGo = $('#roomId').val();
         var $sceneHtml = $(".scene-html-".concat(_this.randSceneId));
-        if ($sceneHtml.find('.room-error').length > 0) return; //  console.log(roomToGo);
+        if ($sceneHtml.find('.room-error').length > 0) return;
+        game.gameData.turn.setIsMyTurn(false); //  console.log(roomToGo);
 
         _this.setPlaneScene.socket.send({
           action: 'goToRoom',
@@ -1441,7 +1571,10 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
 
       this.scene.launch('StartScene', {
         setPlaneScene: this
-      }).bringToTop('StartScene'); // this.scene.launch('SetOpponentScene', {
+      }).bringToTop('StartScene'); //
+      //
+      ///
+      // this.scene.launch('SetOpponentScene', {
       //     setPlaneScene: this,
       // });
       // setTimeout(() => {
@@ -1475,13 +1608,15 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
         for (var i = 0; i < keysLength; i++) {
           //heads.push(this.planes[keys[i]].cells[0]);
           allPlanesCells = [].concat(_toConsumableArray(allPlanesCells), _toConsumableArray(_this2.planes[keys[i]].cells));
-        }
+        } //console.log(this.planes);
+
 
         _this2.scene.stop();
 
         _this2.scene.start('MainScene', {
           planesData: {
-            cells: allPlanesCells
+            cells: allPlanesCells,
+            planes: _this2.planes
           }
         });
       });

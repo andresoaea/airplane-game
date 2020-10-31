@@ -5,13 +5,8 @@ class Socket {
         const url = `ws://192.168.0.105:8080/comm?${queryString}`;
         const conn = new WebSocket(url);
 
-        // //
-        // this.toSend = null;
-        // //
-
         conn.onopen = (e) => {
             console.log(`Connection established to ${url}`);
-            // this.send(this.toSend);
         };
         this.conn = conn;
         conn.onmessage = (e) => {
@@ -27,7 +22,6 @@ class Socket {
                     "We can't connect to the server now. Please try again later.",
                 icon: 'error',
                 showConfirmButton: false,
-                //timer: 2000,
             });
         };
     }
@@ -39,6 +33,7 @@ class Socket {
         switch (msg.action) {
             case 'setMyRoom':
                 game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
+                game.gameData.turn.setIsMyTurn(true);
                 break;
             case 'invalidRoom':
                 game.scene.getScene('SetOpponentScene').printInvalidRoom();
@@ -52,6 +47,7 @@ class Socket {
                 break;
             case 'attack':
                 this.doAttack(msg);
+                game.gameData.turn.reverse();
                 break;
             case 'setOpponentData':
                 this.doSetOpponentData(msg);
@@ -71,10 +67,12 @@ class Socket {
 
         if (this.scene.myPlanesCells.includes(cellId.replace('p', ''))) {
             // Targeted point
-            this.scene.add.image(rect.centerX, rect.centerY, 'fire');
+            this.scene.add
+                .image(rect.centerX, rect.centerY, 'fire')
+                .setScale(0.8);
         } else {
             // Missed point
-            this.scene.add.image(rect.centerX, rect.centerY, 'x');
+            this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
         }
 
         // const graphics = this.scene.add.graphics({
@@ -93,10 +91,6 @@ class Socket {
         if (this.conn.readyState === WebSocket.CLOSED) return;
         return this.conn.send(JSON.stringify(msg));
     }
-
-    // sendOnConnect(msg) {
-    //     this.toSend = msg;
-    // }
 }
 
 export default Socket;
