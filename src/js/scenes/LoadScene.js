@@ -29,6 +29,7 @@ class LoadScene extends Phaser.Scene {
 
         this.load.image('x', 'assets/images/x.png');
         this.load.image('fire', 'assets/images/fire.png');
+        this.load.image('fire-cap', 'assets/images/fire-cap.png');
 
         this.load.image('plane-1', 'assets/images/planes/plane-1.png');
         this.load.image('plane-2', 'assets/images/planes/plane-2.png');

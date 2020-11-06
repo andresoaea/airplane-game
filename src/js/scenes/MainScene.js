@@ -1,5 +1,7 @@
 // import Socket from '../Socket';
+import Map from '../components/Map';
 import Players from '../components/Players';
+import Background from '../components/Background';
 
 class MainScene extends Phaser.Scene {
     constructor() {
@@ -33,9 +35,9 @@ class MainScene extends Phaser.Scene {
     // }
 
     create() {
-        console.log('main create');
+        // console.log('main create');
 
-        this.drawSceneBackground();
+        const background = new Background(this);
 
         this.playersComponent = new Players(this);
         //this.game.scene.getScene('SetPlaneScene').players.opponent
@@ -47,8 +49,10 @@ class MainScene extends Phaser.Scene {
             },
         });
 
-        this.drawPlayerMap(40, 80);
-        this.drawPlayerMap(440, 80, 'opponent');
+        // this.drawPlayerMap(40, 80);
+        // this.drawPlayerMap(440, 80, 'opponent');
+        const playerMap = new Map(this, 96 - 32, 98, null, true);
+        const opponentMap = new Map(this, 96 + 32 * 11, 98, 'opponent', true);
 
         this.drawPlanes();
 
@@ -66,115 +70,128 @@ class MainScene extends Phaser.Scene {
     drawPlanes() {
         // console.log(this.myPlanes);
         Object.keys(this.myPlanes).forEach((planeKey) => {
-            const playerMapLeftDiff = 2 * 40; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
+            const playerMapLeftDiff = game.opts.cellSize; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
             const plane = this.myPlanes[planeKey].instance;
             const planeImage = this.add
                 .image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key)
-                .setAngle(plane.angle);
+                .setAngle(plane.angle)
+                .setAlpha(0.9)
+                .setScale(game.zoom);
         });
     }
 
-    drawPlayerMap(x, y, type = null) {
-        const sqareWidth = 40;
-        const cellsNum = 8;
+    // drawPlayerMap(x, y, type = null) {
+    //     const sqareWidth = 40;
+    //     const cellsNum = 8;
 
-        for (let i = 0; i < cellsNum; i++) {
-            // Go vertical
-            for (let j = 0; j < cellsNum; j++) {
-                // Go horizontal
-                this.drawRect(
-                    x + j * sqareWidth,
-                    y + i * sqareWidth,
-                    sqareWidth,
-                    i,
-                    j,
-                    type
-                );
-            }
-        }
-    }
+    //     for (let i = 0; i < cellsNum; i++) {
+    //         // Go vertical
+    //         for (let j = 0; j < cellsNum; j++) {
+    //             // Go horizontal
+    //             this.drawRect(
+    //                 x + j * sqareWidth,
+    //                 y + i * sqareWidth,
+    //                 sqareWidth,
+    //                 i,
+    //                 j,
+    //                 type
+    //             );
+    //         }
+    //     }
+    // }
 
-    drawRect(x, y, sqareWidth, i, j, type) {
-        let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
-        //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-        var graphics = this.add.graphics({
-            lineStyle: { width: 1, color: 0x0000aa },
-        });
-        graphics.strokeRectShape(rect);
+    // drawRect(x, y, sqareWidth, i, j, type) {
+    //     let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
+    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //     var graphics = this.add.graphics({
+    //         lineStyle: { width: 1, color: 0x0000aa },
+    //     });
+    //     graphics.strokeRectShape(rect);
 
-        graphics.setInteractive(
-            new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth),
-            Phaser.Geom.Rectangle.Contains
-        );
+    //     graphics.setInteractive(
+    //         new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth),
+    //         Phaser.Geom.Rectangle.Contains
+    //     );
 
-        const owner = type === 'opponent' ? 'p' : 'o';
+    //     const owner = type === 'opponent' ? 'p' : 'o';
 
-        const id = `${owner}${j + 1}${i + 1}`;
-        this.cells[id] = { graphics, rect };
-        // graphics.setData('id', id);
-        graphics.on('pointerdown', () => {
-            if (type !== 'opponent') return;
+    //     const id = `${owner}${j + 1}${i + 1}`;
+    //     this.cells[id] = { graphics, rect };
+    //     // graphics.setData('id', id);
+    //     graphics.on('pointerdown', () => {
+    //         if (type !== 'opponent') return;
 
-            if ($.isEmptyObject(this.opponentData)) {
-                console.log('opponent not ready yet');
-                return;
-            }
+    //         if ($.isEmptyObject(this.opponentData)) {
+    //             console.log('opponent not ready yet');
+    //             return;
+    //         }
 
-            if (!this.turn.isMyTurn) {
-                console.log('not my turn');
-                game.gameData.turn.scaleText();
-                return;
-            }
+    //         if (!this.turn.isMyTurn) {
+    //             //console.log('not my turn');
+    //             game.gameData.turn.scaleText();
+    //             return;
+    //         }
 
-            this.socket.send({
-                action: 'attack',
-                cellClicked: id,
-            });
+    //         this.socket.send({
+    //             action: 'attack',
+    //             cellClicked: id,
+    //         });
 
-            if (this.opponentData.planesCells.includes(`${j + 1}${i + 1}`)) {
-                // Targeted point
-                graphics = this.add.graphics({
-                    fillStyle: { color: 0x000000 },
-                });
-                graphics.fillRectShape(rect);
-            } else {
-                // Missed point
-                this.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
-            }
+    //         const cellNum = `${j + 1}${i + 1}`;
+    //         if (this.opponentData.planesCells.includes(cellNum)) {
+    //             // Targeted point
+    //             graphics = this.add.graphics({
+    //                 fillStyle: { color: 0x800000 },
+    //             });
+    //             graphics.fillRectShape(rect);
 
-            game.gameData.turn.reverse();
-        });
-    }
+    //             const texture =
+    //                 this.opponentData.planesCells[0] == cellNum ||
+    //                 this.opponentData.planesCells[10] == cellNum
+    //                     ? 'fire-cap'
+    //                     : 'fire';
 
-    drawSceneBackground() {
-        const x = 0;
-        const y = 0;
-        const sqareWidth = 40;
-        const cellsNum = 20;
+    //             this.add
+    //                 .image(rect.centerX, rect.centerY, texture)
+    //                 .setScale(0.8);
+    //         } else {
+    //             // Missed point
+    //             this.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
+    //         }
 
-        for (let i = 0; i < cellsNum; i++) {
-            // Go vertical
-            for (let j = 0; j < cellsNum; j++) {
-                // Go horizontal
-                this.drawBgRect(
-                    x + j * sqareWidth,
-                    y + i * sqareWidth,
-                    sqareWidth,
-                    i,
-                    j
-                );
-            }
-        }
-    }
+    //         game.gameData.turn.reverse();
+    //     });
+    // }
 
-    drawBgRect(x, y, sqareWidth, i, j) {
-        let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
-        //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-        var graphics = this.add.graphics({
-            lineStyle: { width: 1, color: 0xeeeeee },
-        });
-        graphics.strokeRectShape(rect);
-    }
+    // drawSceneBackground() {
+    //     const x = 0;
+    //     const y = 0;
+    //     const sqareWidth = 40;
+    //     const cellsNum = 20;
+
+    //     for (let i = 0; i < cellsNum; i++) {
+    //         // Go vertical
+    //         for (let j = 0; j < cellsNum; j++) {
+    //             // Go horizontal
+    //             this.drawBgRect(
+    //                 x + j * sqareWidth,
+    //                 y + i * sqareWidth,
+    //                 sqareWidth,
+    //                 i,
+    //                 j
+    //             );
+    //         }
+    //     }
+    // }
+
+    // drawBgRect(x, y, sqareWidth, i, j) {
+    //     let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
+    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //     var graphics = this.add.graphics({
+    //         lineStyle: { width: 1, color: 0xeeeeee },
+    //     });
+    //     graphics.strokeRectShape(rect);
+    // }
 }
 
 export default MainScene;

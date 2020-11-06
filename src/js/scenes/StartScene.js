@@ -22,7 +22,7 @@ class StartScene extends Phaser.Scene {
 
         const playBtn = this.add
             .image(game.config.width / 2, game.config.height / 2, 'play-btn')
-            .setScale(0.5)
+            .setScale(game.zoom * 0.5)
             .setAlpha(0.7)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', this.start, this);

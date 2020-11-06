@@ -1,10 +1,8 @@
 import Phaser from 'phaser';
-// import moment, { lang } from 'moment';
 import Swal from 'sweetalert2';
+import Helpers from './helpers';
 
-// window.moment = moment;
 window.Swal = Swal;
-
 window.jQuery = window.$ = require('jquery');
 // window.axios = require('axios');
 // window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -15,21 +13,32 @@ import StartScene from './scenes/StartScene';
 import SetPlaneScene from './scenes/SetPlaneScene';
 import SetOpponentScene from './scenes/SetOpponentScene';
 
-let config = {
+const zoom = Helpers.getDevicePixelRatio();
+
+const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 458,
+    width: 800 * zoom,
+    height: 458 * zoom,
     parent: 'game',
     title: 'The Airplanes with Friends',
     version: '0.1.0',
     url: '',
 };
 
-let game = new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+game.zoom = zoom;
+game.opts = {
+    cellSize: 32 * zoom,
+    defaultWidth: 800,
+    defaultHeight: 458,
+};
+
 game.scene.add('LoadScene', new LoadScene());
 game.scene.add('MainScene', new MainScene());
 game.scene.add('StartScene', new StartScene());
 game.scene.add('SetPlaneScene', new SetPlaneScene());
 game.scene.add('SetOpponentScene', new SetOpponentScene());
 game.scene.start('LoadScene');
+
 window.game = game;

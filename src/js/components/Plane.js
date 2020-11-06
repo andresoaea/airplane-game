@@ -1,6 +1,12 @@
 class Plane extends Phaser.GameObjects.Sprite {
     constructor(config) {
-        super(config.scene, config.x, config.y, `plane-${config.planeNum}`);
+        super(
+            config.scene,
+            config.x * game.zoom,
+            config.y * game.zoom,
+            `plane-${config.planeNum}`
+        );
+
         config.scene.add.existing(this);
 
         this.scene = config.scene;
@@ -12,10 +18,14 @@ class Plane extends Phaser.GameObjects.Sprite {
                 y: this.y,
             });
 
-        this.scene.input.on('pointerdown', this.startDrag, this);
+        this.setInteractive();
+        this.scene.input.setDraggable(this);
+        this.scene.input.on('dragstart', this.dragStart, this);
+        this.scene.input.on('dragend', this.dragEnd, this);
+        this.scene.input.on('drag', this.drag, this);
 
         // Other variables
-
+        //this.dragObj = null;
         this.planeName = `plane${config.planeNum}`;
         this.stablePos = [
             {
@@ -26,128 +36,60 @@ class Plane extends Phaser.GameObjects.Sprite {
         this.planeCells = [];
         this.isInDropZone = false;
         this.firstClickTime = 0;
-        // this.lastPos = { x: 0, y: 0 };
-        // this.lastAngle = 0;
     }
 
-    startDrag(pointer, targets) {
-        if (targets[0] !== this) return;
-        this.dragObj = targets[0];
+    /**
+     *  Drag & drop logic
+     */
 
-        // this.dragObj.depth++;
-        // this.scene.planes.map((plane) => {
-        //     return plane.instance.depth--;
-        // });
-
-        // if (this.scene.planes.length === 2) {
-        //     this.scene.planes.find((plane) => {
-        //         return plane.instance === this;
-        //     });
-        // }
-
-        //  console.log(this.dragObj.depth);
-        // console.log(this.planeName);
-
-        this.checkDoubleTap();
-        this.scene.input.off('pointerdown', this.startDrag, this);
-        this.scene.input.on('pointermove', this.doDrag, this);
-        this.scene.input.on('pointerup', this.stopDrag, this);
-
-        if (typeof this.dragObj !== 'undefined') {
-            this.pointerDiffY = pointer.y - this.dragObj.y;
-            this.pointerDiffX = pointer.x - this.dragObj.x;
-        }
+    dragStart(pointer, gameObject) {
+        if (gameObject !== this) return;
+        this.moveToFront();
+        // console.log('start  drag');
     }
 
-    doDrag(pointer, targets) {
-        if (targets[0] !== this) return;
+    drag(pointer, gameObject, dragX, dragY) {
+        if (gameObject !== this) return;
+        //console.log('drag');
+        gameObject.x = dragX;
+        gameObject.y = dragY;
 
-        if (typeof this.dragObj !== 'undefined') {
-            // Move
-            this.dragObj.x = pointer.x - this.pointerDiffX;
-            this.dragObj.y = pointer.y - this.pointerDiffY;
-
-            let initialPos = this.dragObj.getData('initialPos');
-
-            // Scale
-            if (pointer.x < initialPos.x) {
-                if (this.isInDropZone) {
-                    this.dragObj.setScale(1.1);
-                } else {
-                    this.dragObj.setScale(
-                        (game.config.width - this.dragObj.x) / 450
-                    );
-                }
-            }
-        }
+        this.scaleOnDrag(pointer);
     }
 
-    stopDrag(pointer, targets) {
-        if (targets[0] !== this) return;
+    dragEnd(pointer, gameObject) {
+        if (gameObject !== this) return;
+        // console.log('end drag');
+        this.checkDoubleTap(pointer);
+        this.checkIfInDropZone();
+    }
 
-        this.scene.input.on('pointerdown', this.startDrag, this);
-        this.scene.input.off('pointermove', this.doDrag, this);
-        this.scene.input.off('pointerup', this.stopDrag, this);
-
-        if (typeof this.dragObj == 'undefined') return;
-
-        // Check if in drop zone
-        let dragX = this.dragObj.x;
-        let dragY = this.dragObj.y;
-
-        let dropZone = this.getDropZone();
+    /**
+     * Visual actions
+     */
+    checkIfInDropZone() {
+        const dropZone = this.getDropZone();
 
         if (
-            dragX > dropZone.x &&
-            dragX < dropZone.x + dropZone.width &&
-            dragY > dropZone.y &&
-            dragY < dropZone.y + dropZone.height
+            this.x > dropZone.x &&
+            this.x < dropZone.x + dropZone.width &&
+            this.y > dropZone.y &&
+            this.y < dropZone.y + dropZone.height
         ) {
             // Inside drop zone
-            this.dragObj.setScale(1);
+            this.setScale(1);
 
-            //console.log(this.lastAngle);
-
-            // if (
-            //     (this.x !== this.lastPos.x && this.y !== this.lastPos.y) ||
-            //     this.angle !== this.lastAngle
-            // ) {
             this.repositionToClosest('x');
             this.repositionToClosest('y');
-            // }
-
-            // this.lastPos = {
-            //     x: this.x,
-            //     y: this.y,
-            // };
-            // this.lastAngle = this.angle;
 
             this.setPlaneCells();
 
             this.isInDropZone = true;
-
-            //this.dragObj.x =
         } else {
             // Outside drop zone / Go back to initial position
             this.goToInitialPosition();
-
             this.isInDropZone = false;
         }
-    }
-
-    goToInitialPosition() {
-        this.scene.tweens.add({
-            targets: [this.dragObj],
-            x: this.dragObj.getData('initialPos').x,
-            y: this.dragObj.getData('initialPos').y,
-            scaleX: 0.4,
-            scaleY: 0.4,
-            duration: 500,
-        });
-
-        // console.log(this.scene.planes);
-        delete this.scene.planes[this.planeName];
-        // console.log(this.scene.planes);
     }
 
     repositionToClosest(axis) {
@@ -165,30 +107,36 @@ class Plane extends Phaser.GameObjects.Sprite {
     repositionHorizontal(axis) {
         let dropZone = this.getDropZone();
 
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 10; i++) {
             if (i < 2) continue;
 
-            let closest = i * 40;
-            let relativeDistance = this.dragObj[axis] - dropZone[axis];
+            let closest = i * game.opts.cellSize;
+            let relativeDistance = this[axis] - dropZone[axis];
 
             if (axis === 'y') {
-                relativeDistance = relativeDistance + 20;
+                relativeDistance = relativeDistance + game.opts.cellSize / 2;
             }
 
-            if (relativeDistance - closest < 39) {
+            if (relativeDistance - closest < game.opts.cellSize - 1) {
                 // Horizontal plane
-                let newPos = closest + dropZone[axis] + (axis === 'x' ? 20 : 0);
+                let newPos =
+                    closest +
+                    dropZone[axis] +
+                    (axis === 'x' ? game.opts.cellSize / 2 : 0);
 
-                if (i > 5) {
+                if (i > 7) {
                     // this.dragObj[axis] =
                     //     5 * 40 + dropZone[axis] + (axis === 'x' ? 20 : 0);
                     if (axis === 'x') {
-                        this.dragObj.x = 5 * 40 + dropZone.x + 20;
+                        this.x =
+                            7 * game.opts.cellSize +
+                            dropZone.x +
+                            game.opts.cellSize / 2;
                     } else {
-                        this.dragObj.y = 5 * 40 + dropZone.x;
+                        this.y = 8 * game.opts.cellSize + dropZone.y;
                     }
                 } else {
-                    this.dragObj[axis] = newPos;
+                    this[axis] = newPos;
                 }
 
                 break;
@@ -199,32 +147,38 @@ class Plane extends Phaser.GameObjects.Sprite {
     repositionVertical(axis) {
         let dropZone = this.getDropZone();
 
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < 11; i++) {
             if (i < 2) continue;
 
-            let closest = i * 40;
-            let relativeDistance = this.dragObj[axis] - dropZone[axis];
+            let closest = i * game.opts.cellSize;
+            let relativeDistance = this[axis] - dropZone[axis];
 
             if (axis === 'x') {
-                relativeDistance = relativeDistance + 20;
+                relativeDistance = relativeDistance + game.opts.cellSize / 2;
             }
 
-            if (relativeDistance - closest < 39) {
+            if (relativeDistance - closest < game.opts.cellSize - 1) {
                 // Horizontal plane
-                let newPos = closest + dropZone[axis] + (axis === 'y' ? 20 : 0);
+                let newPos =
+                    closest +
+                    dropZone[axis] +
+                    (axis === 'y' ? game.opts.cellSize / 2 : 0);
 
-                if (i > 5) {
+                if (i > 7) {
                     // this.dragObj[axis] =
                     //     5 * 40 + dropZone[axis] + (axis === 'x' ? 20 : 0);
                     if (axis === 'x') {
-                        this.dragObj.x = 6 * 40 + dropZone.x;
+                        this.x = 8 * game.opts.cellSize + dropZone.x;
                         //console.log('aici 1');
                     } else {
-                        this.dragObj.y = 5 * 40 + dropZone.x - 20;
+                        this.y =
+                            8 * game.opts.cellSize +
+                            dropZone.x -
+                            game.opts.cellSize / 2;
                         ///console.log('aici 2');
                     }
                 } else {
-                    this.dragObj[axis] = newPos;
+                    this[axis] = newPos;
                 }
 
                 break;
@@ -232,11 +186,47 @@ class Plane extends Phaser.GameObjects.Sprite {
         }
     }
 
-    getDropZone() {
-        let { x, y, width, height } = this.scene.dropZoneRect;
-        return { x, y, width, height };
+    goToInitialPosition() {
+        this.scene.tweens.add({
+            targets: [this],
+            x: this.getData('initialPos').x,
+            y: this.getData('initialPos').y,
+            scaleX: game.zoom * 0.4,
+            scaleY: game.zoom * 0.4,
+            duration: 500,
+        });
+
+        // console.log(this.scene.planes);
+        delete this.scene.planes[this.planeName];
+        // console.log(this.scene.planes);
     }
 
+    scaleOnDrag(pointer) {
+        if (pointer.x < this.getData('initialPos').x) {
+            if (this.isInDropZone) {
+                this.setScale(1.1);
+            } else {
+                this.setScaleNoZoom((game.config.width - this.x) / 450);
+            }
+        }
+    }
+
+    moveToFront() {
+        const objects = this.scene.planesGameObjects;
+        objects.forEach((planeGameObject) => {
+            if (this === planeGameObject) {
+                objects.splice(objects.indexOf(this), 1);
+                objects.push(this);
+            }
+        });
+        objects.forEach((planeGameObject) => {
+            planeGameObject.setDepth(objects.indexOf(planeGameObject));
+        });
+    }
+
+    /**
+     *  Calculations and settings
+     */
     setPlaneCells() {
         let headCellId;
         let planeData = this.getPlanePositionData();
@@ -253,23 +243,14 @@ class Plane extends Phaser.GameObjects.Sprite {
             }
         });
 
-        //console.log(headCellId);
+        if (!headCellId) {
+            this.goToInitialPosition();
+            return;
+        }
 
         let headCords = headCellId.split('').map((num) => parseInt(num));
         headCords = { x: headCords[0], y: headCords[1] };
 
-        // let planeCells = [
-        //     headCellId,
-        //     // `${headCords.y + 1}${headCords.x - 2}`,
-        //     // `${headCords.y + 1}${headCords.x - 1}`,
-        //     // `${headCords.x}${headCords.y + 1}`,
-        //     // `${headCords.x + 1}${headCords.y + 1}`,
-        //     // `${headCords.x + 2}${headCords.y + 1}`,
-        //     // `${headCords.x}${headCords.y + 2}`,
-        //     // `${headCords.y + 3}${headCords.x - 1}`,
-        //     // `${headCords.x}${headCords.y + 3}`,
-        //     // `${headCords.x + 1}${headCords.y + 3}`,
-        // ];
         let planeCells = [];
 
         let schema = planeData.schema;
@@ -292,15 +273,10 @@ class Plane extends Phaser.GameObjects.Sprite {
             }
         }
 
-        //console.log(planeCells);
+        // console.log(planeCells);
         this.planeCells = planeCells;
 
-        if (this.scene.planes[this.planeName]) {
-            this.scene.planes[this.planeName].cells = planeCells;
-        }
-
         // Push current plane to planes object
-
         const currPlaneExists = Object.keys(this.scene.planes).includes(
             this.planeName
         );
@@ -310,23 +286,13 @@ class Plane extends Phaser.GameObjects.Sprite {
                 cells: planeCells,
                 instance: this,
             };
+        } else {
+            this.scene.planes[this.planeName].cells = planeCells;
         }
-
-        // let existingCurrentPlane = this.scene.planes.find((plane) => {
-        //     return plane.name === this.planeName;
-        // });
-
-        // if (!existingCurrentPlane) {
-        //     this.scene.planes.push({
-        //         name: this.planeName,
-        //         cells: planeCells,
-        //         instance: this,
-        //     });
-        // }
 
         // Check for overlap
         let isOverlapping = this.checkOverlap();
-        console.log(isOverlapping);
+        //console.log(isOverlapping, this.planeName);
         if (!isOverlapping) {
             this.stablePos.push({
                 x: this.x,
@@ -345,12 +311,18 @@ class Plane extends Phaser.GameObjects.Sprite {
         let keys = Object.keys(this.scene.planes);
         if (keys.length < 2) return false;
 
-        let firstPlaneCells = this.scene.planes[keys[0]].cells;
-        // console.log(firstPlaneCells);
+        let otherPlaneCells;
+
+        keys.forEach((planeKey) => {
+            if (planeKey !== this.planeName) {
+                otherPlaneCells = this.scene.planes[planeKey].cells;
+            }
+        });
+
         let overlap = false;
 
         for (let i = 0; i < this.planeCells.length; i++) {
-            if (firstPlaneCells.includes(this.planeCells[i])) {
+            if (otherPlaneCells.includes(this.planeCells[i])) {
                 //console.log('overlap');
 
                 // Reposition plane back to last stable positio
@@ -367,7 +339,7 @@ class Plane extends Phaser.GameObjects.Sprite {
                     // console.log('overl afetr');
                 }
 
-                console.log(this.planeCells[i]);
+                // console.log(this.planeCells[i]);
 
                 overlap = true;
                 break;
@@ -375,6 +347,11 @@ class Plane extends Phaser.GameObjects.Sprite {
         }
 
         return overlap;
+    }
+
+    getDropZone() {
+        let { x, y, width, height } = this.scene.dropZoneRect;
+        return { x, y, width, height };
     }
 
     getPlanePositionData() {
@@ -387,7 +364,10 @@ class Plane extends Phaser.GameObjects.Sprite {
         switch (this.angle) {
             case 90:
                 headPoint = {
-                    x: this.x + this.height / 2 - this.scene.cellSize / 2,
+                    x:
+                        this.x +
+                        (this.height * game.zoom) / 2 -
+                        game.opts.cellSize / 2,
                     y: this.y,
                 };
                 schema = [
@@ -405,7 +385,10 @@ class Plane extends Phaser.GameObjects.Sprite {
             case -180:
                 headPoint = {
                     x: this.x,
-                    y: this.y + this.height / 2 - this.scene.cellSize / 2,
+                    y:
+                        this.y +
+                        (this.height * game.zoom) / 2 -
+                        game.opts.cellSize / 2,
                 };
                 schema = [
                     [0, 1, 1, 1, 0],
@@ -420,7 +403,10 @@ class Plane extends Phaser.GameObjects.Sprite {
                 break;
             case -90:
                 headPoint = {
-                    x: this.x - this.height / 2 + this.scene.cellSize / 2,
+                    x:
+                        this.x -
+                        (this.height * game.zoom) / 2 +
+                        game.opts.cellSize / 2,
                     y: this.y,
                 };
                 schema = [
@@ -439,7 +425,10 @@ class Plane extends Phaser.GameObjects.Sprite {
             default:
                 headPoint = {
                     x: this.x,
-                    y: this.y - this.height / 2 + this.scene.cellSize / 2,
+                    y:
+                        this.y -
+                        (this.height * game.zoom) / 2 +
+                        game.opts.cellSize / 2,
                 };
                 schema = [
                     [0, 0, 1, 0, 0],
@@ -456,32 +445,34 @@ class Plane extends Phaser.GameObjects.Sprite {
         return { schema, headPoint, diff };
     }
 
+    /**
+     * Double tap check
+     */
     checkDoubleTap() {
-        if (typeof this.dragObj === 'undefined') return;
-
-        if (this.firstClickTime == 0) {
-            this.firstClickTime = this.getTime();
+        if (!this.lastClickTime) {
+            this.lastClickTime = this.scene.time.now;
             return;
         }
-
-        let elapsed = this.getTime() - this.firstClickTime;
-
-        if (elapsed < 400) {
-            // Rotate plane on double tap
-
+        const clickDelay = this.scene.time.now - this.lastClickTime;
+        this.lastClickTime = this.scene.time.now;
+        if (clickDelay < 350) {
             this.angle += 90;
             // this.repositionToClosest('x');
             // this.repositionToClosest('y');
         }
-
-        this.firstClickTime = 0;
     }
 
-    getTime() {
-        //make a new date object
-        let d = new Date();
-        //return the number of milliseconds since 1 January 1970 00:00:00.
-        return d.getTime();
+    /**
+     * Override inherited methods
+     */
+    setScale(scale) {
+        super.setScale(scale * game.zoom);
+        return this;
+    }
+
+    setScaleNoZoom(scale) {
+        super.setScale(scale);
+        return this;
     }
 }
 

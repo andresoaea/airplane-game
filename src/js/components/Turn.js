@@ -24,13 +24,14 @@ class Turn {
     }
 
     printTurnText() {
+        const fontSize = 16 * game.zoom;
         this.text = this.scene.add
-            .text(game.config.width / 2, 36, this.getTurnText(), {
+            .text(game.config.width / 2, 36 * game.zoom, this.getTurnText(), {
                 color: '#fff',
                 fontFamily: 'Righteous',
                 stroke: 'rgba(0,0,0,.6)',
                 strokeThickness: 1,
-                fontSize: '16px',
+                fontSize: `${fontSize}px`,
             })
             .setOrigin(0.5)
             .setDepth(4);
@@ -48,14 +49,14 @@ class Turn {
                 duration: 400,
                 yoyo: true,
                 onComplete: () => {
-                    this.text.setColor('#fff');
+                    this.text.setColor('#fff').setScale(1);
                 },
             });
         }, 400);
     }
 
     scaleText() {
-        this.text.setText(this.getTurnText()).setColor('#f79e0f');
+        this.text.setText(this.getTurnText()).setColor('#ff0000');
         const tween = this.scene.tweens.add({
             targets: [this.text],
             scaleX: 1.5,
@@ -63,7 +64,7 @@ class Turn {
             duration: 400,
             yoyo: true,
             onComplete: () => {
-                this.text.setColor('#fff');
+                this.text.setColor('#fff').setScale(1);
             },
         });
     }

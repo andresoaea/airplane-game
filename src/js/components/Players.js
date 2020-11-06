@@ -10,7 +10,12 @@ class Players {
     }
 
     printBackground() {
-        const rect = new Phaser.Geom.Rectangle(0, 0, game.config.width, 70);
+        const rect = new Phaser.Geom.Rectangle(
+            0,
+            0,
+            game.config.width,
+            66 * game.zoom
+        );
         const graphics = this.scene.add.graphics();
         graphics.fillStyle(0x000000, 0.6);
         graphics.fillRectShape(rect);
@@ -38,15 +43,22 @@ class Players {
     printOpponent() {
         this.printPlayerPhoto(
             `opponent-${this.opponent.id}`,
-            game.config.width - 80,
+            game.opts.defaultWidth - 80,
             10
         );
-        this.printPlayerName(this.opponent.name, game.config.width - 90, 50);
+        this.printPlayerName(
+            this.opponent.name,
+            game.opts.defaultWidth - 90,
+            50
+        );
     }
 
     printPlayerPhoto(key, x, y) {
-        const width = 50;
+        const width = 50 * game.zoom;
         const height = width;
+
+        x = x * game.zoom;
+        y = y * game.zoom;
 
         // Create mask
         const shape = this.scene.add.graphics();
@@ -66,13 +78,14 @@ class Players {
     }
 
     printPlayerName(name, x, y, originX = 1) {
+        const fontSize = 20 * game.zoom;
         this.scene.add
-            .text(x, y, name, {
+            .text(x * game.zoom, y * game.zoom, name, {
                 color: '#fff',
                 fontFamily: 'Righteous',
                 stroke: 'rgba(0,0,0,.6)',
                 strokeThickness: 1,
-                fontSize: '20px',
+                fontSize: `${fontSize}px`,
             })
             .setOrigin(originX, 0.5)
             .setDepth(4);

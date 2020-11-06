@@ -168,11 +168,13 @@ var Socket = /*#__PURE__*/function () {
     value: function doAttack(msg) {
       var cellId = msg.cellClicked;
       if (!cellId) return;
+      var cellNum = cellId.replace('p', '');
       var rect = this.scene.cells[cellId.replace('p', 'o')].rect;
 
-      if (this.scene.myPlanesCells.includes(cellId.replace('p', ''))) {
+      if (this.scene.myPlanesCells.includes(cellNum)) {
         // Targeted point
-        this.scene.add.image(rect.centerX, rect.centerY, 'fire').setScale(0.8);
+        var texture = this.scene.myPlanesCells[0] == cellNum || this.scene.myPlanesCells[10] == cellNum ? 'fire-cap' : 'fire';
+        this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.8);
       } else {
         // Missed point
         this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
@@ -205,6 +207,233 @@ var Socket = /*#__PURE__*/function () {
 
 /***/ }),
 
+/***/ "./src/js/components/Background.js":
+/*!*****************************************!*\
+  !*** ./src/js/components/Background.js ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Background = /*#__PURE__*/function () {
+  function Background(scene) {
+    _classCallCheck(this, Background);
+
+    this.scene = scene;
+    this.draw();
+  }
+
+  _createClass(Background, [{
+    key: "draw",
+    value: function draw() {
+      var x = 0;
+      var y = 0;
+      var squareWidth = game.opts.cellSize;
+      var cellsNum = 26;
+
+      for (var i = 0; i < cellsNum; i++) {
+        // Go vertical
+        for (var j = 0; j < cellsNum; j++) {
+          // Go horizontal
+          this.drawSingleRect(x + j * squareWidth, y + i * squareWidth, squareWidth, i, j);
+        }
+      }
+    }
+  }, {
+    key: "drawSingleRect",
+    value: function drawSingleRect(x, y, squareWidth, i, j) {
+      var rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth);
+      var graphics = this.scene.add.graphics({
+        lineStyle: {
+          width: 1 * game.zoom,
+          color: 0xeeeeee
+        }
+      });
+      graphics.strokeRectShape(rect);
+    }
+  }]);
+
+  return Background;
+}();
+
+/* harmony default export */ __webpack_exports__["default"] = (Background);
+
+/***/ }),
+
+/***/ "./src/js/components/Map.js":
+/*!**********************************!*\
+  !*** ./src/js/components/Map.js ***!
+  \**********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function($) {function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Map = /*#__PURE__*/function () {
+  function Map(scene, x, y) {
+    var type = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+    var isMainScene = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
+
+    _classCallCheck(this, Map);
+
+    this.type = type;
+    this.scene = scene;
+    this.x = x * game.zoom;
+    this.y = y * game.zoom;
+    this.isMainScene = isMainScene;
+    this.drawMap();
+  }
+
+  _createClass(Map, [{
+    key: "drawMap",
+    value: function drawMap() {
+      var squareWidth = game.opts.cellSize;
+      var cellsNum = 10;
+
+      for (var i = 0; i < cellsNum; i++) {
+        // Go vertical
+        for (var j = 0; j < cellsNum; j++) {
+          // Go horizontal
+          this.drawRect(this.x + j * squareWidth, this.y + i * squareWidth, squareWidth, i, j);
+        }
+      }
+
+      this.drawBorder(this.x, this.y, squareWidth, cellsNum); // Draw coordinates
+
+      var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+
+      for (var _i = 0; _i < letters.length; _i++) {
+        // Draw letters
+        var letter = letters[_i].toUpperCase();
+
+        this.drawText(letter, this.x - game.opts.cellSize / 2, this.y + game.opts.cellSize / 2 + game.opts.cellSize * _i); // Draw numbers
+
+        this.drawText(_i + 1, this.x + game.opts.cellSize / 2 + game.opts.cellSize * _i, this.y - game.opts.cellSize / 2);
+      }
+    }
+  }, {
+    key: "drawBorder",
+    value: function drawBorder(x, y, squareWidth, cellsNum) {
+      var width = squareWidth * cellsNum;
+      var rect = new Phaser.Geom.Rectangle(x, y, width, width);
+      var graphics = this.scene.add.graphics({
+        lineStyle: {
+          width: 3 * game.zoom,
+          color: 0x424242
+        }
+      });
+      graphics.strokeRectShape(rect);
+      this.scene.dropZoneRect = rect;
+    }
+  }, {
+    key: "drawRect",
+    value: function drawRect(x, y, squareWidth, i, j) {
+      var _this = this;
+
+      var rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+
+      var graphics = this.scene.add.graphics({
+        lineStyle: {
+          width: 1 * game.zoom,
+          color: 0x424242
+        }
+      });
+      graphics.strokeRectShape(rect);
+
+      if (this.isMainScene) {
+        // Rect in MainScene
+        graphics.setInteractive(new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth), Phaser.Geom.Rectangle.Contains);
+        var owner = this.type === 'opponent' ? 'p' : 'o';
+        var id = "".concat(owner).concat(j + 1).concat(i + 1);
+        this.scene.cells[id] = {
+          graphics: graphics,
+          rect: rect
+        };
+        graphics.on('pointerdown', function () {
+          if (_this.type !== 'opponent') return;
+
+          if ($.isEmptyObject(_this.scene.opponentData)) {
+            console.log('opponent not ready yet');
+            return;
+          }
+
+          if (!_this.scene.turn.isMyTurn) {
+            //console.log('not my turn');
+            game.gameData.turn.scaleText();
+            return;
+          }
+
+          _this.scene.socket.send({
+            action: 'attack',
+            cellClicked: id
+          });
+
+          var cellNum = "".concat(j + 1).concat(i + 1);
+
+          if (_this.scene.opponentData.planesCells.includes(cellNum)) {
+            // Targeted point
+            var gph = _this.scene.add.graphics({
+              fillStyle: {
+                color: 0x800000
+              }
+            });
+
+            gph.fillRectShape(rect);
+            var texture = _this.scene.opponentData.planesCells[0] == cellNum || _this.scene.opponentData.planesCells[10] == cellNum ? 'fire-cap' : 'fire';
+
+            _this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6);
+          } else {
+            // Missed point
+            _this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.6);
+          }
+
+          game.gameData.turn.reverse();
+        });
+      } else {
+        // Rect in SetPlaneScene
+        var _id = "".concat(j + 1).concat(i + 1);
+
+        this.scene.cells[_id] = {
+          id: _id,
+          rect: rect
+        };
+      }
+    }
+  }, {
+    key: "drawText",
+    value: function drawText(text, x, y) {
+      var fontSize = 16 * game.zoom;
+      this.scene.add.text(x, y, text, {
+        color: '#424242',
+        fontFamily: 'Righteous',
+        // stroke: '#000',
+        // strokeThickness: 1,
+        fontSize: "".concat(fontSize, "px")
+      }).setOrigin(0.5).setDepth(4);
+    }
+  }]);
+
+  return Map;
+}();
+
+/* harmony default export */ __webpack_exports__["default"] = (Map);
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
 /***/ "./src/js/components/Plane.js":
 /*!************************************!*\
   !*** ./src/js/components/Plane.js ***!
@@ -221,6 +450,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
+
+function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -246,7 +479,7 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
 
     _classCallCheck(this, Plane);
 
-    _this = _super.call(this, config.scene, config.x, config.y, "plane-".concat(config.planeNum));
+    _this = _super.call(this, config.scene, config.x * game.zoom, config.y * game.zoom, "plane-".concat(config.planeNum));
     config.scene.add.existing(_assertThisInitialized(_this));
     _this.scene = config.scene;
 
@@ -255,7 +488,16 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
       y: _this.y
     });
 
-    _this.scene.input.on('pointerdown', _this.startDrag, _assertThisInitialized(_this)); // Other variables
+    _this.setInteractive();
+
+    _this.scene.input.setDraggable(_assertThisInitialized(_this));
+
+    _this.scene.input.on('dragstart', _this.dragStart, _assertThisInitialized(_this));
+
+    _this.scene.input.on('dragend', _this.dragEnd, _assertThisInitialized(_this));
+
+    _this.scene.input.on('drag', _this.drag, _assertThisInitialized(_this)); // Other variables
+    //this.dragObj = null;
 
 
     _this.planeName = "plane".concat(config.planeNum);
@@ -265,108 +507,58 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
     }];
     _this.planeCells = [];
     _this.isInDropZone = false;
-    _this.firstClickTime = 0; // this.lastPos = { x: 0, y: 0 };
-    // this.lastAngle = 0;
-
+    _this.firstClickTime = 0;
     return _this;
   }
+  /**
+   *  Drag & drop logic
+   */
+
 
   _createClass(Plane, [{
-    key: "startDrag",
-    value: function startDrag(pointer, targets) {
-      if (targets[0] !== this) return;
-      this.dragObj = targets[0]; // this.dragObj.depth++;
-      // this.scene.planes.map((plane) => {
-      //     return plane.instance.depth--;
-      // });
-      // if (this.scene.planes.length === 2) {
-      //     this.scene.planes.find((plane) => {
-      //         return plane.instance === this;
-      //     });
-      // }
-      //  console.log(this.dragObj.depth);
-      // console.log(this.planeName);
-
-      this.checkDoubleTap();
-      this.scene.input.off('pointerdown', this.startDrag, this);
-      this.scene.input.on('pointermove', this.doDrag, this);
-      this.scene.input.on('pointerup', this.stopDrag, this);
-
-      if (typeof this.dragObj !== 'undefined') {
-        this.pointerDiffY = pointer.y - this.dragObj.y;
-        this.pointerDiffX = pointer.x - this.dragObj.x;
-      }
+    key: "dragStart",
+    value: function dragStart(pointer, gameObject) {
+      if (gameObject !== this) return;
+      this.moveToFront(); // console.log('start  drag');
     }
   }, {
-    key: "doDrag",
-    value: function doDrag(pointer, targets) {
-      if (targets[0] !== this) return;
+    key: "drag",
+    value: function drag(pointer, gameObject, dragX, dragY) {
+      if (gameObject !== this) return; //console.log('drag');
 
-      if (typeof this.dragObj !== 'undefined') {
-        // Move
-        this.dragObj.x = pointer.x - this.pointerDiffX;
-        this.dragObj.y = pointer.y - this.pointerDiffY;
-        var initialPos = this.dragObj.getData('initialPos'); // Scale
-
-        if (pointer.x < initialPos.x) {
-          if (this.isInDropZone) {
-            this.dragObj.setScale(1.1);
-          } else {
-            this.dragObj.setScale((game.config.width - this.dragObj.x) / 450);
-          }
-        }
-      }
+      gameObject.x = dragX;
+      gameObject.y = dragY;
+      this.scaleOnDrag(pointer);
     }
   }, {
-    key: "stopDrag",
-    value: function stopDrag(pointer, targets) {
-      if (targets[0] !== this) return;
-      this.scene.input.on('pointerdown', this.startDrag, this);
-      this.scene.input.off('pointermove', this.doDrag, this);
-      this.scene.input.off('pointerup', this.stopDrag, this);
-      if (typeof this.dragObj == 'undefined') return; // Check if in drop zone
+    key: "dragEnd",
+    value: function dragEnd(pointer, gameObject) {
+      if (gameObject !== this) return; // console.log('end drag');
 
-      var dragX = this.dragObj.x;
-      var dragY = this.dragObj.y;
+      this.checkDoubleTap(pointer);
+      this.checkIfInDropZone();
+    }
+    /**
+     * Visual actions
+     */
+
+  }, {
+    key: "checkIfInDropZone",
+    value: function checkIfInDropZone() {
       var dropZone = this.getDropZone();
 
-      if (dragX > dropZone.x && dragX < dropZone.x + dropZone.width && dragY > dropZone.y && dragY < dropZone.y + dropZone.height) {
+      if (this.x > dropZone.x && this.x < dropZone.x + dropZone.width && this.y > dropZone.y && this.y < dropZone.y + dropZone.height) {
         // Inside drop zone
-        this.dragObj.setScale(1); //console.log(this.lastAngle);
-        // if (
-        //     (this.x !== this.lastPos.x && this.y !== this.lastPos.y) ||
-        //     this.angle !== this.lastAngle
-        // ) {
-
+        this.setScale(1);
         this.repositionToClosest('x');
-        this.repositionToClosest('y'); // }
-        // this.lastPos = {
-        //     x: this.x,
-        //     y: this.y,
-        // };
-        // this.lastAngle = this.angle;
-
+        this.repositionToClosest('y');
         this.setPlaneCells();
-        this.isInDropZone = true; //this.dragObj.x =
+        this.isInDropZone = true;
       } else {
         // Outside drop zone / Go back to initial position
         this.goToInitialPosition();
         this.isInDropZone = false;
       }
-    }
-  }, {
-    key: "goToInitialPosition",
-    value: function goToInitialPosition() {
-      this.scene.tweens.add({
-        targets: [this.dragObj],
-        x: this.dragObj.getData('initialPos').x,
-        y: this.dragObj.getData('initialPos').y,
-        scaleX: 0.4,
-        scaleY: 0.4,
-        duration: 500
-      }); // console.log(this.scene.planes);
-
-      delete this.scene.planes[this.planeName]; // console.log(this.scene.planes);
     }
   }, {
     key: "repositionToClosest",
@@ -385,29 +577,29 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
     value: function repositionHorizontal(axis) {
       var dropZone = this.getDropZone();
 
-      for (var i = 0; i < 8; i++) {
+      for (var i = 0; i < 10; i++) {
         if (i < 2) continue;
-        var closest = i * 40;
-        var relativeDistance = this.dragObj[axis] - dropZone[axis];
+        var closest = i * game.opts.cellSize;
+        var relativeDistance = this[axis] - dropZone[axis];
 
         if (axis === 'y') {
-          relativeDistance = relativeDistance + 20;
+          relativeDistance = relativeDistance + game.opts.cellSize / 2;
         }
 
-        if (relativeDistance - closest < 39) {
+        if (relativeDistance - closest < game.opts.cellSize - 1) {
           // Horizontal plane
-          var newPos = closest + dropZone[axis] + (axis === 'x' ? 20 : 0);
+          var newPos = closest + dropZone[axis] + (axis === 'x' ? game.opts.cellSize / 2 : 0);
 
-          if (i > 5) {
+          if (i > 7) {
             // this.dragObj[axis] =
             //     5 * 40 + dropZone[axis] + (axis === 'x' ? 20 : 0);
             if (axis === 'x') {
-              this.dragObj.x = 5 * 40 + dropZone.x + 20;
+              this.x = 7 * game.opts.cellSize + dropZone.x + game.opts.cellSize / 2;
             } else {
-              this.dragObj.y = 5 * 40 + dropZone.x;
+              this.y = 8 * game.opts.cellSize + dropZone.y;
             }
           } else {
-            this.dragObj[axis] = newPos;
+            this[axis] = newPos;
           }
 
           break;
@@ -419,34 +611,185 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
     value: function repositionVertical(axis) {
       var dropZone = this.getDropZone();
 
-      for (var i = 0; i < 9; i++) {
+      for (var i = 0; i < 11; i++) {
         if (i < 2) continue;
-        var closest = i * 40;
-        var relativeDistance = this.dragObj[axis] - dropZone[axis];
+        var closest = i * game.opts.cellSize;
+        var relativeDistance = this[axis] - dropZone[axis];
 
         if (axis === 'x') {
-          relativeDistance = relativeDistance + 20;
+          relativeDistance = relativeDistance + game.opts.cellSize / 2;
         }
 
-        if (relativeDistance - closest < 39) {
+        if (relativeDistance - closest < game.opts.cellSize - 1) {
           // Horizontal plane
-          var newPos = closest + dropZone[axis] + (axis === 'y' ? 20 : 0);
+          var newPos = closest + dropZone[axis] + (axis === 'y' ? game.opts.cellSize / 2 : 0);
 
-          if (i > 5) {
+          if (i > 7) {
             // this.dragObj[axis] =
             //     5 * 40 + dropZone[axis] + (axis === 'x' ? 20 : 0);
             if (axis === 'x') {
-              this.dragObj.x = 6 * 40 + dropZone.x; //console.log('aici 1');
+              this.x = 8 * game.opts.cellSize + dropZone.x; //console.log('aici 1');
             } else {
-              this.dragObj.y = 5 * 40 + dropZone.x - 20; ///console.log('aici 2');
+              this.y = 8 * game.opts.cellSize + dropZone.x - game.opts.cellSize / 2; ///console.log('aici 2');
             }
           } else {
-            this.dragObj[axis] = newPos;
+            this[axis] = newPos;
           }
 
           break;
         }
       }
+    }
+  }, {
+    key: "goToInitialPosition",
+    value: function goToInitialPosition() {
+      this.scene.tweens.add({
+        targets: [this],
+        x: this.getData('initialPos').x,
+        y: this.getData('initialPos').y,
+        scaleX: game.zoom * 0.4,
+        scaleY: game.zoom * 0.4,
+        duration: 500
+      }); // console.log(this.scene.planes);
+
+      delete this.scene.planes[this.planeName]; // console.log(this.scene.planes);
+    }
+  }, {
+    key: "scaleOnDrag",
+    value: function scaleOnDrag(pointer) {
+      if (pointer.x < this.getData('initialPos').x) {
+        if (this.isInDropZone) {
+          this.setScale(1.1);
+        } else {
+          this.setScaleNoZoom((game.config.width - this.x) / 450);
+        }
+      }
+    }
+  }, {
+    key: "moveToFront",
+    value: function moveToFront() {
+      var _this2 = this;
+
+      var objects = this.scene.planesGameObjects;
+      objects.forEach(function (planeGameObject) {
+        if (_this2 === planeGameObject) {
+          objects.splice(objects.indexOf(_this2), 1);
+          objects.push(_this2);
+        }
+      });
+      objects.forEach(function (planeGameObject) {
+        planeGameObject.setDepth(objects.indexOf(planeGameObject));
+      });
+    }
+    /**
+     *  Calculations and settings
+     */
+
+  }, {
+    key: "setPlaneCells",
+    value: function setPlaneCells() {
+      var headCellId;
+      var planeData = this.getPlanePositionData();
+      var headPoint = planeData.headPoint; //console.log(planeData);
+
+      this.scene.cells.forEach(function (cell) {
+        if (cell.rect.centerX === headPoint.x && cell.rect.centerY === headPoint.y) {
+          headCellId = cell.id;
+        }
+      });
+
+      if (!headCellId) {
+        this.goToInitialPosition();
+        return;
+      }
+
+      var headCords = headCellId.split('').map(function (num) {
+        return parseInt(num);
+      });
+      headCords = {
+        x: headCords[0],
+        y: headCords[1]
+      };
+      var planeCells = [];
+      var schema = planeData.schema;
+      var originX = headCords.x + planeData.diff.x;
+      var originY = headCords.y + planeData.diff.y;
+
+      for (var i = 0; i < schema.length; i++) {
+        var line = schema[i]; //console.log('line', i);
+
+        for (var j = 0; j < line.length; j++) {
+          var cellPlaceholder = line[j];
+
+          if (cellPlaceholder) {
+            planeCells.push("".concat(originX + j).concat(originY + i));
+          } //console.log(`${i + 1}${j + 1}`);
+
+        }
+      } // console.log(planeCells);
+
+
+      this.planeCells = planeCells; // Push current plane to planes object
+
+      var currPlaneExists = Object.keys(this.scene.planes).includes(this.planeName);
+
+      if (!currPlaneExists) {
+        this.scene.planes[this.planeName] = {
+          cells: planeCells,
+          instance: this
+        };
+      } else {
+        this.scene.planes[this.planeName].cells = planeCells;
+      } // Check for overlap
+
+
+      var isOverlapping = this.checkOverlap(); //console.log(isOverlapping, this.planeName);
+
+      if (!isOverlapping) {
+        this.stablePos.push({
+          x: this.x,
+          y: this.y
+        });
+
+        if (this.stablePos.length > 1) {
+          this.stablePos.shift();
+        }
+      } //localStorage.setItem('lastPlaceCells', planeCells.join(','));
+
+    }
+  }, {
+    key: "checkOverlap",
+    value: function checkOverlap() {
+      var _this3 = this;
+
+      var keys = Object.keys(this.scene.planes);
+      if (keys.length < 2) return false;
+      var otherPlaneCells;
+      keys.forEach(function (planeKey) {
+        if (planeKey !== _this3.planeName) {
+          otherPlaneCells = _this3.scene.planes[planeKey].cells;
+        }
+      });
+      var overlap = false;
+
+      for (var i = 0; i < this.planeCells.length; i++) {
+        if (otherPlaneCells.includes(this.planeCells[i])) {
+          //console.log('overlap');
+          // Reposition plane back to last stable positio
+          if (this.stablePos[0].x === this.getData('initialPos').x && this.stablePos[0].y === this.getData('initialPos').y) {
+            this.goToInitialPosition(); //console.log('overl init');
+          } else {
+            this.x = this.stablePos[0].x;
+            this.y = this.stablePos[0].y; // console.log('overl afetr');
+          } // console.log(this.planeCells[i]);
+
+
+          overlap = true;
+          break;
+        }
+      }
+
+      return overlap;
     }
   }, {
     key: "getDropZone",
@@ -464,127 +807,6 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
       };
     }
   }, {
-    key: "setPlaneCells",
-    value: function setPlaneCells() {
-      var headCellId;
-      var planeData = this.getPlanePositionData();
-      var headPoint = planeData.headPoint; //console.log(planeData);
-
-      this.scene.cells.forEach(function (cell) {
-        if (cell.rect.centerX === headPoint.x && cell.rect.centerY === headPoint.y) {
-          headCellId = cell.id;
-        }
-      }); //console.log(headCellId);
-
-      var headCords = headCellId.split('').map(function (num) {
-        return parseInt(num);
-      });
-      headCords = {
-        x: headCords[0],
-        y: headCords[1]
-      }; // let planeCells = [
-      //     headCellId,
-      //     // `${headCords.y + 1}${headCords.x - 2}`,
-      //     // `${headCords.y + 1}${headCords.x - 1}`,
-      //     // `${headCords.x}${headCords.y + 1}`,
-      //     // `${headCords.x + 1}${headCords.y + 1}`,
-      //     // `${headCords.x + 2}${headCords.y + 1}`,
-      //     // `${headCords.x}${headCords.y + 2}`,
-      //     // `${headCords.y + 3}${headCords.x - 1}`,
-      //     // `${headCords.x}${headCords.y + 3}`,
-      //     // `${headCords.x + 1}${headCords.y + 3}`,
-      // ];
-
-      var planeCells = [];
-      var schema = planeData.schema;
-      var originX = headCords.x + planeData.diff.x;
-      var originY = headCords.y + planeData.diff.y;
-
-      for (var i = 0; i < schema.length; i++) {
-        var line = schema[i]; //console.log('line', i);
-
-        for (var j = 0; j < line.length; j++) {
-          var cellPlaceholder = line[j];
-
-          if (cellPlaceholder) {
-            planeCells.push("".concat(originX + j).concat(originY + i));
-          } //console.log(`${i + 1}${j + 1}`);
-
-        }
-      } //console.log(planeCells);
-
-
-      this.planeCells = planeCells;
-
-      if (this.scene.planes[this.planeName]) {
-        this.scene.planes[this.planeName].cells = planeCells;
-      } // Push current plane to planes object
-
-
-      var currPlaneExists = Object.keys(this.scene.planes).includes(this.planeName);
-
-      if (!currPlaneExists) {
-        this.scene.planes[this.planeName] = {
-          cells: planeCells,
-          instance: this
-        };
-      } // let existingCurrentPlane = this.scene.planes.find((plane) => {
-      //     return plane.name === this.planeName;
-      // });
-      // if (!existingCurrentPlane) {
-      //     this.scene.planes.push({
-      //         name: this.planeName,
-      //         cells: planeCells,
-      //         instance: this,
-      //     });
-      // }
-      // Check for overlap
-
-
-      var isOverlapping = this.checkOverlap();
-      console.log(isOverlapping);
-
-      if (!isOverlapping) {
-        this.stablePos.push({
-          x: this.x,
-          y: this.y
-        });
-
-        if (this.stablePos.length > 1) {
-          this.stablePos.shift();
-        }
-      } //localStorage.setItem('lastPlaceCells', planeCells.join(','));
-
-    }
-  }, {
-    key: "checkOverlap",
-    value: function checkOverlap() {
-      var keys = Object.keys(this.scene.planes);
-      if (keys.length < 2) return false;
-      var firstPlaneCells = this.scene.planes[keys[0]].cells; // console.log(firstPlaneCells);
-
-      var overlap = false;
-
-      for (var i = 0; i < this.planeCells.length; i++) {
-        if (firstPlaneCells.includes(this.planeCells[i])) {
-          //console.log('overlap');
-          // Reposition plane back to last stable positio
-          if (this.stablePos[0].x === this.getData('initialPos').x && this.stablePos[0].y === this.getData('initialPos').y) {
-            this.goToInitialPosition(); //console.log('overl init');
-          } else {
-            this.x = this.stablePos[0].x;
-            this.y = this.stablePos[0].y; // console.log('overl afetr');
-          }
-
-          console.log(this.planeCells[i]);
-          overlap = true;
-          break;
-        }
-      }
-
-      return overlap;
-    }
-  }, {
     key: "getPlanePositionData",
     value: function getPlanePositionData() {
       var schema;
@@ -596,7 +818,7 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
       switch (this.angle) {
         case 90:
           headPoint = {
-            x: this.x + this.height / 2 - this.scene.cellSize / 2,
+            x: this.x + this.height * game.zoom / 2 - game.opts.cellSize / 2,
             y: this.y
           };
           schema = [[0, 0, 1, 0], [1, 0, 1, 0], [1, 1, 1, 1], [1, 0, 1, 0], [0, 0, 1, 0]];
@@ -609,7 +831,7 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
         case -180:
           headPoint = {
             x: this.x,
-            y: this.y + this.height / 2 - this.scene.cellSize / 2
+            y: this.y + this.height * game.zoom / 2 - game.opts.cellSize / 2
           };
           schema = [[0, 1, 1, 1, 0], [0, 0, 1, 0, 0], [1, 1, 1, 1, 1], [0, 0, 1, 0, 0]];
           diff = {
@@ -620,7 +842,7 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
 
         case -90:
           headPoint = {
-            x: this.x - this.height / 2 + this.scene.cellSize / 2,
+            x: this.x - this.height * game.zoom / 2 + game.opts.cellSize / 2,
             y: this.y
           };
           schema = [[0, 1, 0, 0], [0, 1, 0, 1], [1, 1, 1, 1], [0, 1, 0, 1], [0, 1, 0, 0]];
@@ -633,7 +855,7 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
         default:
           headPoint = {
             x: this.x,
-            y: this.y - this.height / 2 + this.scene.cellSize / 2
+            y: this.y - this.height * game.zoom / 2 + game.opts.cellSize / 2
           };
           schema = [[0, 0, 1, 0, 0], [1, 1, 1, 1, 1], [0, 0, 1, 0, 0], [0, 1, 1, 1, 0]];
           diff = {
@@ -648,33 +870,43 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
         diff: diff
       };
     }
+    /**
+     * Double tap check
+     */
+
   }, {
     key: "checkDoubleTap",
     value: function checkDoubleTap() {
-      if (typeof this.dragObj === 'undefined') return;
-
-      if (this.firstClickTime == 0) {
-        this.firstClickTime = this.getTime();
+      if (!this.lastClickTime) {
+        this.lastClickTime = this.scene.time.now;
         return;
       }
 
-      var elapsed = this.getTime() - this.firstClickTime;
+      var clickDelay = this.scene.time.now - this.lastClickTime;
+      this.lastClickTime = this.scene.time.now;
 
-      if (elapsed < 400) {
-        // Rotate plane on double tap
+      if (clickDelay < 350) {
         this.angle += 90; // this.repositionToClosest('x');
         // this.repositionToClosest('y');
       }
+    }
+    /**
+     * Override inherited methods
+     */
 
-      this.firstClickTime = 0;
+  }, {
+    key: "setScale",
+    value: function setScale(scale) {
+      _get(_getPrototypeOf(Plane.prototype), "setScale", this).call(this, scale * game.zoom);
+
+      return this;
     }
   }, {
-    key: "getTime",
-    value: function getTime() {
-      //make a new date object
-      var d = new Date(); //return the number of milliseconds since 1 January 1970 00:00:00.
+    key: "setScaleNoZoom",
+    value: function setScaleNoZoom(scale) {
+      _get(_getPrototypeOf(Plane.prototype), "setScale", this).call(this, scale);
 
-      return d.getTime();
+      return this;
     }
   }]);
 
@@ -715,7 +947,7 @@ var Players = /*#__PURE__*/function () {
   _createClass(Players, [{
     key: "printBackground",
     value: function printBackground() {
-      var rect = new Phaser.Geom.Rectangle(0, 0, game.config.width, 70);
+      var rect = new Phaser.Geom.Rectangle(0, 0, game.config.width, 66 * game.zoom);
       var graphics = this.scene.add.graphics();
       graphics.fillStyle(0x000000, 0.6);
       graphics.fillRectShape(rect);
@@ -741,14 +973,16 @@ var Players = /*#__PURE__*/function () {
   }, {
     key: "printOpponent",
     value: function printOpponent() {
-      this.printPlayerPhoto("opponent-".concat(this.opponent.id), game.config.width - 80, 10);
-      this.printPlayerName(this.opponent.name, game.config.width - 90, 50);
+      this.printPlayerPhoto("opponent-".concat(this.opponent.id), game.opts.defaultWidth - 80, 10);
+      this.printPlayerName(this.opponent.name, game.opts.defaultWidth - 90, 50);
     }
   }, {
     key: "printPlayerPhoto",
     value: function printPlayerPhoto(key, x, y) {
-      var width = 50;
-      var height = width; // Create mask
+      var width = 50 * game.zoom;
+      var height = width;
+      x = x * game.zoom;
+      y = y * game.zoom; // Create mask
 
       var shape = this.scene.add.graphics();
       shape.fillStyle(0x000000, 1);
@@ -763,12 +997,13 @@ var Players = /*#__PURE__*/function () {
     key: "printPlayerName",
     value: function printPlayerName(name, x, y) {
       var originX = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 1;
-      this.scene.add.text(x, y, name, {
+      var fontSize = 20 * game.zoom;
+      this.scene.add.text(x * game.zoom, y * game.zoom, name, {
         color: '#fff',
         fontFamily: 'Righteous',
         stroke: 'rgba(0,0,0,.6)',
         strokeThickness: 1,
-        fontSize: '20px'
+        fontSize: "".concat(fontSize, "px")
       }).setOrigin(originX, 0.5).setDepth(4);
     }
   }]);
@@ -829,12 +1064,13 @@ var Turn = /*#__PURE__*/function () {
   }, {
     key: "printTurnText",
     value: function printTurnText() {
-      this.text = this.scene.add.text(game.config.width / 2, 36, this.getTurnText(), {
+      var fontSize = 16 * game.zoom;
+      this.text = this.scene.add.text(game.config.width / 2, 36 * game.zoom, this.getTurnText(), {
         color: '#fff',
         fontFamily: 'Righteous',
         stroke: 'rgba(0,0,0,.6)',
         strokeThickness: 1,
-        fontSize: '16px'
+        fontSize: "".concat(fontSize, "px")
       }).setOrigin(0.5).setDepth(4);
     }
   }, {
@@ -854,7 +1090,7 @@ var Turn = /*#__PURE__*/function () {
           duration: 400,
           yoyo: true,
           onComplete: function onComplete() {
-            _this.text.setColor('#fff');
+            _this.text.setColor('#fff').setScale(1);
           }
         });
       }, 400);
@@ -864,7 +1100,7 @@ var Turn = /*#__PURE__*/function () {
     value: function scaleText() {
       var _this2 = this;
 
-      this.text.setText(this.getTurnText()).setColor('#f79e0f');
+      this.text.setText(this.getTurnText()).setColor('#ff0000');
       var tween = this.scene.tweens.add({
         targets: [this.text],
         scaleX: 1.5,
@@ -872,7 +1108,7 @@ var Turn = /*#__PURE__*/function () {
         duration: 400,
         yoyo: true,
         onComplete: function onComplete() {
-          _this2.text.setColor('#fff');
+          _this2.text.setColor('#fff').setScale(1);
         }
       });
     }
@@ -898,14 +1134,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var phaser__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(phaser__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
 /* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./scenes/LoadScene */ "./src/js/scenes/LoadScene.js");
-/* harmony import */ var _scenes_MainScene__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./scenes/MainScene */ "./src/js/scenes/MainScene.js");
-/* harmony import */ var _scenes_StartScene__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./scenes/StartScene */ "./src/js/scenes/StartScene.js");
-/* harmony import */ var _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./scenes/SetPlaneScene */ "./src/js/scenes/SetPlaneScene.js");
-/* harmony import */ var _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./scenes/SetOpponentScene */ "./src/js/scenes/SetOpponentScene.js");
- // import moment, { lang } from 'moment';
+/* harmony import */ var _helpers__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./helpers */ "./src/js/helpers.js");
+/* harmony import */ var _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./scenes/LoadScene */ "./src/js/scenes/LoadScene.js");
+/* harmony import */ var _scenes_MainScene__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./scenes/MainScene */ "./src/js/scenes/MainScene.js");
+/* harmony import */ var _scenes_StartScene__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./scenes/StartScene */ "./src/js/scenes/StartScene.js");
+/* harmony import */ var _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./scenes/SetPlaneScene */ "./src/js/scenes/SetPlaneScene.js");
+/* harmony import */ var _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./scenes/SetOpponentScene */ "./src/js/scenes/SetOpponentScene.js");
 
- // window.moment = moment;
+
 
 window.Swal = sweetalert2__WEBPACK_IMPORTED_MODULE_1___default.a;
 __webpack_provided_window_dot_jQuery = window.$ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js"); // window.axios = require('axios');
@@ -916,24 +1152,82 @@ __webpack_provided_window_dot_jQuery = window.$ = __webpack_require__(/*! jquery
 
 
 
+var zoom = _helpers__WEBPACK_IMPORTED_MODULE_2__["default"].getDevicePixelRatio();
 var config = {
   type: phaser__WEBPACK_IMPORTED_MODULE_0___default.a.AUTO,
-  width: 800,
-  height: 458,
+  width: 800 * zoom,
+  height: 458 * zoom,
   parent: 'game',
   title: 'The Airplanes with Friends',
   version: '0.1.0',
   url: ''
 };
 var game = new phaser__WEBPACK_IMPORTED_MODULE_0___default.a.Game(config);
-game.scene.add('LoadScene', new _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_2__["default"]());
-game.scene.add('MainScene', new _scenes_MainScene__WEBPACK_IMPORTED_MODULE_3__["default"]());
-game.scene.add('StartScene', new _scenes_StartScene__WEBPACK_IMPORTED_MODULE_4__["default"]());
-game.scene.add('SetPlaneScene', new _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_5__["default"]());
-game.scene.add('SetOpponentScene', new _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_6__["default"]());
+game.zoom = zoom;
+game.opts = {
+  cellSize: 32 * zoom,
+  defaultWidth: 800,
+  defaultHeight: 458
+};
+game.scene.add('LoadScene', new _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_3__["default"]());
+game.scene.add('MainScene', new _scenes_MainScene__WEBPACK_IMPORTED_MODULE_4__["default"]());
+game.scene.add('StartScene', new _scenes_StartScene__WEBPACK_IMPORTED_MODULE_5__["default"]());
+game.scene.add('SetPlaneScene', new _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_6__["default"]());
+game.scene.add('SetOpponentScene', new _scenes_SetOpponentScene__WEBPACK_IMPORTED_MODULE_7__["default"]());
 game.scene.start('LoadScene');
 window.game = game;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
+
+/***/ }),
+
+/***/ "./src/js/helpers.js":
+/*!***************************!*\
+  !*** ./src/js/helpers.js ***!
+  \***************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ({
+  getDevicePixelRatio: function getDevicePixelRatio() {
+    var mediaQuery;
+    var is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+
+    if (window.devicePixelRatio !== undefined && !is_firefox) {
+      return window.devicePixelRatio;
+    } else if (window.matchMedia) {
+      mediaQuery = '(-webkit-min-device-pixel-ratio: 1.5),\
+              (min--moz-device-pixel-ratio: 1.5),\
+              (-o-min-device-pixel-ratio: 3/2),\
+              (min-resolution: 1.5dppx)';
+
+      if (window.matchMedia(mediaQuery).matches) {
+        return 1.5;
+      }
+
+      mediaQuery = '(-webkit-min-device-pixel-ratio: 2),\
+              (min--moz-device-pixel-ratio: 2),\
+              (-o-min-device-pixel-ratio: 2/1),\
+              (min-resolution: 2dppx)';
+
+      if (window.matchMedia(mediaQuery).matches) {
+        return 2;
+      }
+
+      mediaQuery = '(-webkit-min-device-pixel-ratio: 0.75),\
+              (min--moz-device-pixel-ratio: 0.75),\
+              (-o-min-device-pixel-ratio: 3/4),\
+              (min-resolution: 0.75dppx)';
+
+      if (window.matchMedia(mediaQuery).matches) {
+        return 0.7;
+      }
+    } else {
+      return 1;
+    }
+  }
+});
 
 /***/ }),
 
@@ -1005,6 +1299,7 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.load.image('btn-start-game', 'assets/images/btn-start-game.png');
       this.load.image('x', 'assets/images/x.png');
       this.load.image('fire', 'assets/images/fire.png');
+      this.load.image('fire-cap', 'assets/images/fire-cap.png');
       this.load.image('plane-1', 'assets/images/planes/plane-1.png');
       this.load.image('plane-2', 'assets/images/planes/plane-2.png');
       this.showPreloader();
@@ -1082,7 +1377,9 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
+/* harmony import */ var _components_Map__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Map */ "./src/js/components/Map.js");
+/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
+/* harmony import */ var _components_Background__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/Background */ "./src/js/components/Background.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1106,6 +1403,8 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
 // import Socket from '../Socket';
+
+
 
 
 var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
@@ -1150,18 +1449,20 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "create",
     value: function create() {
-      console.log('main create');
-      this.drawSceneBackground();
-      this.playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_0__["default"](this); //this.game.scene.getScene('SetPlaneScene').players.opponent
+      // console.log('main create');
+      var background = new _components_Background__WEBPACK_IMPORTED_MODULE_2__["default"](this);
+      this.playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_1__["default"](this); //this.game.scene.getScene('SetPlaneScene').players.opponent
 
       this.socket.send({
         action: 'setOpponentData',
         opponentData: {
           planesCells: this.myPlanesCells
         }
-      });
-      this.drawPlayerMap(40, 80);
-      this.drawPlayerMap(440, 80, 'opponent');
+      }); // this.drawPlayerMap(40, 80);
+      // this.drawPlayerMap(440, 80, 'opponent');
+
+      var playerMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 - 32, 98, null, true);
+      var opponentMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 + 32 * 11, 98, 'opponent', true);
       this.drawPlanes();
       this.turn = game.gameData.turn;
       this.turn.setScene(this); //console.log(this.turn);
@@ -1177,121 +1478,116 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 
       // console.log(this.myPlanes);
       Object.keys(this.myPlanes).forEach(function (planeKey) {
-        var playerMapLeftDiff = 2 * 40; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
+        var playerMapLeftDiff = game.opts.cellSize; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
 
         var plane = _this2.myPlanes[planeKey].instance;
 
-        var planeImage = _this2.add.image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key).setAngle(plane.angle);
+        var planeImage = _this2.add.image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key).setAngle(plane.angle).setAlpha(0.9).setScale(game.zoom);
       });
-    }
-  }, {
-    key: "drawPlayerMap",
-    value: function drawPlayerMap(x, y) {
-      var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-      var sqareWidth = 40;
-      var cellsNum = 8;
+    } // drawPlayerMap(x, y, type = null) {
+    //     const sqareWidth = 40;
+    //     const cellsNum = 8;
+    //     for (let i = 0; i < cellsNum; i++) {
+    //         // Go vertical
+    //         for (let j = 0; j < cellsNum; j++) {
+    //             // Go horizontal
+    //             this.drawRect(
+    //                 x + j * sqareWidth,
+    //                 y + i * sqareWidth,
+    //                 sqareWidth,
+    //                 i,
+    //                 j,
+    //                 type
+    //             );
+    //         }
+    //     }
+    // }
+    // drawRect(x, y, sqareWidth, i, j, type) {
+    //     let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
+    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //     var graphics = this.add.graphics({
+    //         lineStyle: { width: 1, color: 0x0000aa },
+    //     });
+    //     graphics.strokeRectShape(rect);
+    //     graphics.setInteractive(
+    //         new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth),
+    //         Phaser.Geom.Rectangle.Contains
+    //     );
+    //     const owner = type === 'opponent' ? 'p' : 'o';
+    //     const id = `${owner}${j + 1}${i + 1}`;
+    //     this.cells[id] = { graphics, rect };
+    //     // graphics.setData('id', id);
+    //     graphics.on('pointerdown', () => {
+    //         if (type !== 'opponent') return;
+    //         if ($.isEmptyObject(this.opponentData)) {
+    //             console.log('opponent not ready yet');
+    //             return;
+    //         }
+    //         if (!this.turn.isMyTurn) {
+    //             //console.log('not my turn');
+    //             game.gameData.turn.scaleText();
+    //             return;
+    //         }
+    //         this.socket.send({
+    //             action: 'attack',
+    //             cellClicked: id,
+    //         });
+    //         const cellNum = `${j + 1}${i + 1}`;
+    //         if (this.opponentData.planesCells.includes(cellNum)) {
+    //             // Targeted point
+    //             graphics = this.add.graphics({
+    //                 fillStyle: { color: 0x800000 },
+    //             });
+    //             graphics.fillRectShape(rect);
+    //             const texture =
+    //                 this.opponentData.planesCells[0] == cellNum ||
+    //                 this.opponentData.planesCells[10] == cellNum
+    //                     ? 'fire-cap'
+    //                     : 'fire';
+    //             this.add
+    //                 .image(rect.centerX, rect.centerY, texture)
+    //                 .setScale(0.8);
+    //         } else {
+    //             // Missed point
+    //             this.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
+    //         }
+    //         game.gameData.turn.reverse();
+    //     });
+    // }
+    // drawSceneBackground() {
+    //     const x = 0;
+    //     const y = 0;
+    //     const sqareWidth = 40;
+    //     const cellsNum = 20;
+    //     for (let i = 0; i < cellsNum; i++) {
+    //         // Go vertical
+    //         for (let j = 0; j < cellsNum; j++) {
+    //             // Go horizontal
+    //             this.drawBgRect(
+    //                 x + j * sqareWidth,
+    //                 y + i * sqareWidth,
+    //                 sqareWidth,
+    //                 i,
+    //                 j
+    //             );
+    //         }
+    //     }
+    // }
+    // drawBgRect(x, y, sqareWidth, i, j) {
+    //     let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
+    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //     var graphics = this.add.graphics({
+    //         lineStyle: { width: 1, color: 0xeeeeee },
+    //     });
+    //     graphics.strokeRectShape(rect);
+    // }
 
-      for (var i = 0; i < cellsNum; i++) {
-        // Go vertical
-        for (var j = 0; j < cellsNum; j++) {
-          // Go horizontal
-          this.drawRect(x + j * sqareWidth, y + i * sqareWidth, sqareWidth, i, j, type);
-        }
-      }
-    }
-  }, {
-    key: "drawRect",
-    value: function drawRect(x, y, sqareWidth, i, j, type) {
-      var _this3 = this;
-
-      var rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-
-      var graphics = this.add.graphics({
-        lineStyle: {
-          width: 1,
-          color: 0x0000aa
-        }
-      });
-      graphics.strokeRectShape(rect);
-      graphics.setInteractive(new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth), Phaser.Geom.Rectangle.Contains);
-      var owner = type === 'opponent' ? 'p' : 'o';
-      var id = "".concat(owner).concat(j + 1).concat(i + 1);
-      this.cells[id] = {
-        graphics: graphics,
-        rect: rect
-      }; // graphics.setData('id', id);
-
-      graphics.on('pointerdown', function () {
-        if (type !== 'opponent') return;
-
-        if ($.isEmptyObject(_this3.opponentData)) {
-          console.log('opponent not ready yet');
-          return;
-        }
-
-        if (!_this3.turn.isMyTurn) {
-          console.log('not my turn');
-          game.gameData.turn.scaleText();
-          return;
-        }
-
-        _this3.socket.send({
-          action: 'attack',
-          cellClicked: id
-        });
-
-        if (_this3.opponentData.planesCells.includes("".concat(j + 1).concat(i + 1))) {
-          // Targeted point
-          graphics = _this3.add.graphics({
-            fillStyle: {
-              color: 0x000000
-            }
-          });
-          graphics.fillRectShape(rect);
-        } else {
-          // Missed point
-          _this3.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
-        }
-
-        game.gameData.turn.reverse();
-      });
-    }
-  }, {
-    key: "drawSceneBackground",
-    value: function drawSceneBackground() {
-      var x = 0;
-      var y = 0;
-      var sqareWidth = 40;
-      var cellsNum = 20;
-
-      for (var i = 0; i < cellsNum; i++) {
-        // Go vertical
-        for (var j = 0; j < cellsNum; j++) {
-          // Go horizontal
-          this.drawBgRect(x + j * sqareWidth, y + i * sqareWidth, sqareWidth, i, j);
-        }
-      }
-    }
-  }, {
-    key: "drawBgRect",
-    value: function drawBgRect(x, y, sqareWidth, i, j) {
-      var rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-
-      var graphics = this.add.graphics({
-        lineStyle: {
-          width: 1,
-          color: 0xeeeeee
-        }
-      });
-      graphics.strokeRectShape(rect);
-    }
   }]);
 
   return MainScene;
 }(Phaser.Scene);
 
 /* harmony default export */ __webpack_exports__["default"] = (MainScene);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
 
 /***/ }),
 
@@ -1469,9 +1765,11 @@ var SetOpponentScene = /*#__PURE__*/function (_Phaser$Scene) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
-/* harmony import */ var _components_Plane__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Plane */ "./src/js/components/Plane.js");
-/* harmony import */ var _Socket__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../Socket */ "./src/js/Socket.js");
+/* harmony import */ var _components_Background__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Background */ "./src/js/components/Background.js");
+/* harmony import */ var _components_Map__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Map */ "./src/js/components/Map.js");
+/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
+/* harmony import */ var _components_Plane__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/Plane */ "./src/js/components/Plane.js");
+/* harmony import */ var _Socket__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../Socket */ "./src/js/Socket.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -1510,6 +1808,8 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
+
+
 var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
   _inherits(SetPlaneScene, _Phaser$Scene);
 
@@ -1526,10 +1826,11 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
         arcade: {//debug: true,
         }
       }
-    });
-    _this.cellSize = 40;
+    }); //this.cellSize = 40;
+
     _this.cells = [];
     _this.planes = {};
+    _this.planesGameObjects = [];
     return _this;
   }
 
@@ -1541,37 +1842,45 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "create",
     value: function create() {
-      this.drawSceneBackground(); // // Setup players
+      // this.drawSceneBackground();
+      var background = new _components_Background__WEBPACK_IMPORTED_MODULE_0__["default"](this); // // Setup players
       //this.players = new Players(this);
+      // const x = 120;
+      // const y = 80;
+      // this.drawPlayerMap(x, y);
 
-      var x = 120;
-      var y = 80;
-      this.drawPlayerMap(x, y); //this.plane = new Plane(this);
+      var map = new _components_Map__WEBPACK_IMPORTED_MODULE_1__["default"](this, 96, 98); //this.plane = new Plane(this);
 
-      var plane1 = new _components_Plane__WEBPACK_IMPORTED_MODULE_1__["default"]({
+      var plane1 = new _components_Plane__WEBPACK_IMPORTED_MODULE_3__["default"]({
         scene: this,
-        x: game.config.width / 2 + 200,
+        x: game.config.width / game.zoom / 2 + 200,
         y: 140,
         planeNum: 1
       });
-      var plane2 = new _components_Plane__WEBPACK_IMPORTED_MODULE_1__["default"]({
+      this.planesGameObjects.push(plane1);
+      var plane2 = new _components_Plane__WEBPACK_IMPORTED_MODULE_3__["default"]({
         scene: this,
-        x: game.config.width / 2 + 300,
+        x: game.config.width / game.zoom / 2 + 300,
         y: 140,
         planeNum: 2
-      }); // Start game btn
+      });
+      this.planesGameObjects.push(plane2); // Start game btn
 
       this.addStartGame();
       var mainScene = game.scene.getScene('MainScene'); // mainScene.players = new Players(mainScene);
+      // ---
 
-      this.socket = new _Socket__WEBPACK_IMPORTED_MODULE_2__["default"]();
-      mainScene.socket = this.socket; // Set opponent screen
+      this.socket = new _Socket__WEBPACK_IMPORTED_MODULE_4__["default"]();
+      mainScene.socket = this.socket; // ---
+      // Set opponent screen
       // this.scene.stop();
       //new Players(this);
+      // ---
 
       this.scene.launch('StartScene', {
         setPlaneScene: this
-      }).bringToTop('StartScene'); //
+      }).bringToTop('StartScene'); // ---
+      //
       //
       ///
       // this.scene.launch('SetOpponentScene', {
@@ -1592,7 +1901,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function addStartGame() {
       var _this2 = this;
 
-      this.add.image(630, 380, 'btn-start-game').setInteractive({
+      this.add.image(630 * game.zoom, 384 * game.zoom, 'btn-start-game').setScale(game.zoom).setInteractive({
         useHandCursor: true
       }).on('pointerup', function () {
         // let heads = [];
@@ -1638,85 +1947,72 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
 
         graphics.strokeRectShape(_this3.cells[cl].rect);
       });
-    }
-  }, {
-    key: "drawPlayerMap",
-    value: function drawPlayerMap(x, y) {
-      var squareWidth = this.cellSize;
-      var cellsNum = 8;
+    } // drawPlayerMap(x, y) {
+    //     const squareWidth = this.cellSize;
+    //     const cellsNum = 8;
+    //     for (let i = 0; i < cellsNum; i++) {
+    //         // Go vertical
+    //         for (let j = 0; j < cellsNum; j++) {
+    //             // Go horizontal
+    //             this.drawRect(
+    //                 x + j * squareWidth,
+    //                 y + i * squareWidth,
+    //                 squareWidth,
+    //                 i,
+    //                 j
+    //             );
+    //         }
+    //     }
+    //     this.drawBorder(x, y, squareWidth, cellsNum);
+    // }
+    // drawBorder(x, y, squareWidth, cellsNum) {
+    //     let width = squareWidth * cellsNum;
+    //     let rect = new Phaser.Geom.Rectangle(x, y, width, width);
+    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //     let graphics = this.add.graphics({
+    //         lineStyle: { width: 3, color: 0x000000 },
+    //     });
+    //     graphics.strokeRectShape(rect);
+    //     this.dropZoneRect = rect;
+    // }
+    // drawRect(x, y, squareWidth, i, j, type) {
+    //     let rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth);
+    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //     let graphics = this.add.graphics({
+    //         lineStyle: { width: 1, color: 0x000000 },
+    //     });
+    //     graphics.strokeRectShape(rect);
+    //     const id = `${j + 1}${i + 1}`;
+    //     this.cells[id] = { id, rect };
+    // }
+    // drawSceneBackground() {
+    //     const x = 0;
+    //     const y = 0;
+    //     const squareWidth = this.cellSize;
+    //     const cellsNum = 20;
+    //     for (let i = 0; i < cellsNum; i++) {
+    //         // Go vertical
+    //         for (let j = 0; j < cellsNum; j++) {
+    //             // Go horizontal
+    //             this.drawBgRect(
+    //                 x + j * squareWidth,
+    //                 y + i * squareWidth,
+    //                 squareWidth,
+    //                 i,
+    //                 j
+    //             );
+    //         }
+    //     }
+    // }
+    // drawBgRect(x, y, squareWidth, i, j) {
+    //     let rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth);
+    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
+    //     var graphics = this.add.graphics({
+    //         lineStyle: { width: 1, color: 0xeeeeee },
+    //     });
+    //     graphics.strokeRectShape(rect);
+    // }
 
-      for (var i = 0; i < cellsNum; i++) {
-        // Go vertical
-        for (var j = 0; j < cellsNum; j++) {
-          // Go horizontal
-          this.drawRect(x + j * squareWidth, y + i * squareWidth, squareWidth, i, j);
-        }
-      }
-
-      this.drawBorder(x, y, squareWidth, cellsNum);
-    }
-  }, {
-    key: "drawBorder",
-    value: function drawBorder(x, y, squareWidth, cellsNum) {
-      var width = squareWidth * cellsNum;
-      var rect = new Phaser.Geom.Rectangle(x, y, width, width); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-
-      var graphics = this.add.graphics({
-        lineStyle: {
-          width: 3,
-          color: 0x000000
-        }
-      });
-      graphics.strokeRectShape(rect);
-      this.dropZoneRect = rect;
-    }
-  }, {
-    key: "drawRect",
-    value: function drawRect(x, y, squareWidth, i, j, type) {
-      var rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-
-      var graphics = this.add.graphics({
-        lineStyle: {
-          width: 1,
-          color: 0x000000
-        }
-      });
-      graphics.strokeRectShape(rect);
-      var id = "".concat(j + 1).concat(i + 1);
-      this.cells[id] = {
-        id: id,
-        rect: rect
-      };
-    }
-  }, {
-    key: "drawSceneBackground",
-    value: function drawSceneBackground() {
-      var x = 0;
-      var y = 0;
-      var squareWidth = this.cellSize;
-      var cellsNum = 20;
-
-      for (var i = 0; i < cellsNum; i++) {
-        // Go vertical
-        for (var j = 0; j < cellsNum; j++) {
-          // Go horizontal
-          this.drawBgRect(x + j * squareWidth, y + i * squareWidth, squareWidth, i, j);
-        }
-      }
-    }
-  }, {
-    key: "drawBgRect",
-    value: function drawBgRect(x, y, squareWidth, i, j) {
-      var rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth); //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-
-      var graphics = this.add.graphics({
-        lineStyle: {
-          width: 1,
-          color: 0xeeeeee
-        }
-      });
-      graphics.strokeRectShape(rect);
-    }
   }]);
 
   return SetPlaneScene;
@@ -1782,7 +2078,7 @@ var StartScene = /*#__PURE__*/function (_Phaser$Scene) {
       var graphics = this.add.graphics();
       graphics.fillStyle(0x000000, 0.8);
       graphics.fillRectShape(rect);
-      var playBtn = this.add.image(game.config.width / 2, game.config.height / 2, 'play-btn').setScale(0.5).setAlpha(0.7).setInteractive({
+      var playBtn = this.add.image(game.config.width / 2, game.config.height / 2, 'play-btn').setScale(game.zoom * 0.5).setAlpha(0.7).setInteractive({
         useHandCursor: true
       }).on('pointerdown', this.start, this);
       this.tweens.add({

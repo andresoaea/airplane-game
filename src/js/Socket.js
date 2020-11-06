@@ -63,12 +63,18 @@ class Socket {
         const cellId = msg.cellClicked;
         if (!cellId) return;
 
+        const cellNum = cellId.replace('p', '');
         const rect = this.scene.cells[cellId.replace('p', 'o')].rect;
 
-        if (this.scene.myPlanesCells.includes(cellId.replace('p', ''))) {
+        if (this.scene.myPlanesCells.includes(cellNum)) {
             // Targeted point
+            const texture =
+                this.scene.myPlanesCells[0] == cellNum ||
+                this.scene.myPlanesCells[10] == cellNum
+                    ? 'fire-cap'
+                    : 'fire';
             this.scene.add
-                .image(rect.centerX, rect.centerY, 'fire')
+                .image(rect.centerX, rect.centerY, texture)
                 .setScale(0.8);
         } else {
             // Missed point
