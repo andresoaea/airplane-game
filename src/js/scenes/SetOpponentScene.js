@@ -13,43 +13,39 @@ class SetOpponentScene extends Phaser.Scene {
     }
 
     create() {
-        const html = `
-            <div class="flex items-center rounded animate__animated animate__backInDown">
-                <div class="flex w-full">
-                    <div class="col-create-room flex flex-1 justify-center items-center flex-col">
-                        <p class="text-gray-800 mb-2">Create a room</p>
-                        <button id="createRoom" class="bg-pink-700 px-4 py-2 text-white rounded">Create</button>
-                    </div> 
-                    <div class="col-go-to-room flex flex-1 justify-center items-center flex-col">
-                    <p class="text-gray-800 mb-2">Go to a room</p>
-                        <input id="roomId" class="mb-2" value="0000" type="text" />
-                        <button id="goToRoom" class="bg-blue-700 px-4 py-2 text-white rounded">Go play</button>
-                    </div> 
-                </div> 
-            </div>
-        `;
-
-        const el = document.createElement('div');
-        el.innerHTML = html;
-        el.style.width = $('canvas').width() + 'px';
-        el.style.height = $('canvas').height() + 'px';
-        el.classList = `scene-html scene-html-${this.randSceneId} absolute t-0 l-0 flex justify-center items-center animate__animated animate__fadeIn`;
-        $('#game').append(el);
-
-        $('body').one('click', '#createRoom', this.getMyRoom.bind(this));
-        $('body').on('click', '#goToRoom', () => {
-            const roomToGo = $('#roomId').val();
-            const $sceneHtml = $(`.scene-html-${this.randSceneId}`);
-            if ($sceneHtml.find('.room-error').length > 0) return;
-
-            game.gameData.turn.setIsMyTurn(false);
-
-            //  console.log(roomToGo);
-            this.setPlaneScene.socket.send({
-                action: 'goToRoom',
-                room: roomToGo,
-            });
-        });
+        // const html = `
+        //     <div class="flex items-center rounded animate__animated animate__backInDown">
+        //         <div class="flex w-full">
+        //             <div class="col-create-room flex flex-1 justify-center items-center flex-col">
+        //                 <p class="text-gray-800 mb-2">Create a room</p>
+        //                 <button id="createRoom" class="bg-pink-700 px-4 py-2 text-white rounded">Create</button>
+        //             </div>
+        //             <div class="col-go-to-room flex flex-1 justify-center items-center flex-col">
+        //             <p class="text-gray-800 mb-2">Go to a room</p>
+        //                 <input id="roomId" class="mb-2" value="0000" type="text" />
+        //                 <button id="goToRoom" class="bg-blue-700 px-4 py-2 text-white rounded">Go play</button>
+        //             </div>
+        //         </div>
+        //     </div>
+        // `;
+        // const el = document.createElement('div');
+        // el.innerHTML = html;
+        // el.style.width = $('canvas').width() + 'px';
+        // el.style.height = $('canvas').height() + 'px';
+        // el.classList = `scene-html scene-html-${this.randSceneId} absolute t-0 l-0 flex justify-center items-center animate__animated animate__fadeIn`;
+        // $('#game').append(el);
+        // $('body').one('click', '#createRoom', this.getMyRoom.bind(this));
+        // $('body').on('click', '#goToRoom', () => {
+        //     const roomToGo = $('#roomId').val();
+        //     const $sceneHtml = $(`.scene-html-${this.randSceneId}`);
+        //     if ($sceneHtml.find('.room-error').length > 0) return;
+        //     game.gameData.turn.setIsMyTurn(false);
+        //     //  console.log(roomToGo);
+        //     this.setPlaneScene.socket.send({
+        //         action: 'goToRoom',
+        //         room: roomToGo,
+        //     });
+        // });
     }
 
     getMyRoom() {

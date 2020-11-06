@@ -34,13 +34,13 @@ button:focus {
 #game {
     position: relative;
 
-    canvas {
-        position: absolute;
-    }
+    // canvas {
+    //     position: absolute;
+    // }
 }
 
 .scene-html {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.7);
     & > div {
         width: 70%;
         height: 70%;

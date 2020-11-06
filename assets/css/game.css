@@ -1,4 +1,6 @@
-@charset "UTF-8";
+ul[data-v-580e046a] {
+  display: inherit;
+}@charset "UTF-8";
 
 /*!
  * animate.css - https://animate.style/
@@ -31103,12 +31105,8 @@ button:focus {
   position: relative;
 }
 
-#game canvas {
-  position: absolute;
-}
-
 .scene-html {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .scene-html > div {

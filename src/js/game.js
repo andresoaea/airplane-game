@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import Phaser from 'phaser';
 import Swal from 'sweetalert2';
 import Helpers from './helpers';
@@ -11,7 +12,9 @@ import LoadScene from './scenes/LoadScene';
 import MainScene from './scenes/MainScene';
 import StartScene from './scenes/StartScene';
 import SetPlaneScene from './scenes/SetPlaneScene';
-import SetOpponentScene from './scenes/SetOpponentScene';
+//import SetOpponentScene from './scenes/SetOpponentScene';
+
+import SetOpponent from './vue-components/SetOpponent.vue';
 
 const zoom = Helpers.getDevicePixelRatio();
 
@@ -33,12 +36,17 @@ game.opts = {
     defaultWidth: 800,
     defaultHeight: 458,
 };
+game.bus = new Vue();
 
 game.scene.add('LoadScene', new LoadScene());
 game.scene.add('MainScene', new MainScene());
 game.scene.add('StartScene', new StartScene());
 game.scene.add('SetPlaneScene', new SetPlaneScene());
-game.scene.add('SetOpponentScene', new SetOpponentScene());
+//game.scene.add('SetOpponentScene', new SetOpponentScene());
 game.scene.start('LoadScene');
 
 window.game = game;
+
+new Vue({
+    render: (h) => h(SetOpponent),
+}).$mount('#game div');

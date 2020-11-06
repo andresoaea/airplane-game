@@ -41,9 +41,10 @@ class StartScene extends Phaser.Scene {
 
     start() {
         this.scene.stop();
-        this.scene.launch('SetOpponentScene', {
-            setPlaneScene: this.setPlaneScene,
-        });
+        game.bus.$emit('showSetOpponent');
+        // this.scene.launch('SetOpponentScene', {
+        //     setPlaneScene: this.setPlaneScene,
+        // });
     }
 }
 
