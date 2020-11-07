@@ -78,10 +78,12 @@ class Socket {
                     : 'fire';
             this.scene.add
                 .image(rect.centerX, rect.centerY, texture)
-                .setScale(0.8);
+                .setScale(0.6 * game.zoom);
         } else {
             // Missed point
-            this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
+            this.scene.add
+                .image(rect.centerX, rect.centerY, 'x')
+                .setScale(0.4 * game.zoom);
         }
 
         // const graphics = this.scene.add.graphics({
@@ -93,6 +95,7 @@ class Socket {
 
     doOpponentDisconnected(msg) {
         console.log('opponent disconnected');
+        game.bus.$emit('PrintOpponentDisconnected');
         this.scene.scene.start('SetPlaneScene');
     }
     // Used external

@@ -63,7 +63,7 @@ class Players {
         // Create mask
         const shape = this.scene.add.graphics();
         shape.fillStyle(0x000000, 1);
-        shape.fillRoundedRect(x, y, width, height, 6);
+        shape.fillRoundedRect(x, y, width, height, 6 * game.zoom);
         const mask = shape.createGeometryMask();
 
         // Add player image

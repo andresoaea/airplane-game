@@ -56,12 +56,46 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
-  name: "set-opponent",
+  name: 'set-opponent',
   data: function data() {
     return {
       show: false,
-      toShow: "initRoom",
+      toShow: 'initRoom',
       codes: [{
         val: 0
       }, {
@@ -71,32 +105,33 @@ __webpack_require__.r(__webpack_exports__);
       }, {
         val: 0
       }],
-      roomCode: "0000",
+      roomCode: '0000',
       roomError: false
     };
   },
   mounted: function mounted() {
     var _this = this;
 
-    game.bus.$on("showSetOpponent", function () {
+    game.bus.$on('showSetOpponent', function () {
       _this.codes.map(function (code) {
         return code.val = 0;
       });
 
-      _this.toShow = "initRoom";
+      _this.toShow = 'initRoom';
       _this.show = true;
     });
-    game.bus.$on("ShowMyRoomId", function (roomCode) {
+    game.bus.$on('ShowMyRoomId', function (roomCode) {
       _this.roomCode = roomCode;
-      _this.toShow = "roomCode";
+      _this.toShow = 'roomCode';
     });
-    game.bus.$on("PrintInvalidRoom", function () {
+    game.bus.$on('PrintInvalidRoom', function () {
       _this.roomError = true;
       setTimeout(function () {
         _this.roomError = false;
       }, 2000);
     });
-    game.bus.$on("StartRoom", function (roomToStart) {
+    game.bus.$on('PrintOpponentDisconnected', this.printOpponentDisonnected);
+    game.bus.$on('StartRoom', function (roomToStart) {
       if (roomToStart == _this.roomCode) {
         // This is the room initiator player
         _this.printOpponentConnected();
@@ -108,24 +143,24 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     createRoom: function createRoom() {
-      game.scene.getScene("SetPlaneScene").socket.send({
-        action: "getMyRoom"
+      game.scene.getScene('SetPlaneScene').socket.send({
+        action: 'getMyRoom'
       });
     },
     goToRoom: function goToRoom() {
       if (this.roomError) return;
       var roomToGo = this.codes.map(function (code) {
         return code.val;
-      }).join("");
+      }).join('');
 
       if (roomToGo == this.roomCode) {
-        game.bus.$emit("PrintInvalidRoom");
+        game.bus.$emit('PrintInvalidRoom');
         return;
       }
 
       game.gameData.turn.setIsMyTurn(false);
-      game.scene.getScene("SetPlaneScene").socket.send({
-        action: "goToRoom",
+      game.scene.getScene('SetPlaneScene').socket.send({
+        action: 'goToRoom',
         room: roomToGo
       });
     },
@@ -138,20 +173,27 @@ __webpack_require__.r(__webpack_exports__);
       this.codes[key].val--;
     },
     goBack: function goBack() {
-      this.toShow = "initRoom";
+      this.toShow = 'initRoom';
     },
     printOpponentConnected: function printOpponentConnected() {
       var _this2 = this;
 
       Swal.fire({
         title: "Let's go!",
-        text: "Opponent connected",
-        icon: "success",
+        text: 'Opponent connected',
+        icon: 'success',
         showConfirmButton: false,
         timer: 2000
       }).then(function () {
         //console.log("execute then");
         _this2.show = false;
+      });
+    },
+    printOpponentDisonnected: function printOpponentDisonnected() {
+      Swal.fire({
+        showConfirmButton: false,
+        html: "<div class=\"no-opponent\">\n              <i class=\"fa fa-user-times text-red-700 mb-4\" aria-hidden=\"true\"></i>\n              <p class=\"text-gray-700\">Opponent has left the room..</p>    \n          </div>",
+        timer: 2000
       });
     }
   }
@@ -224,7 +266,11 @@ var render = function() {
                               }
                             }
                           },
-                          [_vm._v("Create")]
+                          [
+                            _vm._v(
+                              "\n                    Create\n                "
+                            )
+                          ]
                         )
                       ]
                     ),
@@ -287,7 +333,11 @@ var render = function() {
                               }
                             }
                           },
-                          [_vm._v("Go play")]
+                          [
+                            _vm._v(
+                              "\n                    Go play\n                "
+                            )
+                          ]
                         ),
                         _vm._v(" "),
                         _vm.roomError
@@ -302,7 +352,11 @@ var render = function() {
                                 _c(
                                   "p",
                                   { staticClass: "text-red-600 text-xs" },
-                                  [_vm._v("Try again with another code.")]
+                                  [
+                                    _vm._v(
+                                      "\n                        Try again with another code.\n                    "
+                                    )
+                                  ]
                                 )
                               ]
                             )
@@ -315,7 +369,9 @@ var render = function() {
               _vm.toShow === "roomCode"
                 ? _c("div", [
                     _c("p", { staticClass: "text-gray-700" }, [
-                      _vm._v("Your opponent can connect to this room code:")
+                      _vm._v(
+                        "\n                Your opponent can connect to this room code:\n            "
+                      )
                     ]),
                     _vm._v(" "),
                     _c(
@@ -348,7 +404,7 @@ var render = function() {
                           }
                         }
                       },
-                      [_vm._v("Go back")]
+                      [_vm._v("\n                Go back\n            ")]
                     )
                   ])
                 : _vm._e()
@@ -542,10 +598,10 @@ var Socket = /*#__PURE__*/function () {
       if (this.scene.myPlanesCells.includes(cellNum)) {
         // Targeted point
         var texture = this.scene.myPlanesCells[0] == cellNum || this.scene.myPlanesCells[10] == cellNum ? 'fire-cap' : 'fire';
-        this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.8);
+        this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom);
       } else {
         // Missed point
-        this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
+        this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.4 * game.zoom);
       } // const graphics = this.scene.add.graphics({
       //     fillStyle: { color },
       // });
@@ -556,6 +612,7 @@ var Socket = /*#__PURE__*/function () {
     key: "doOpponentDisconnected",
     value: function doOpponentDisconnected(msg) {
       console.log('opponent disconnected');
+      game.bus.$emit('PrintOpponentDisconnected');
       this.scene.scene.start('SetPlaneScene');
     } // Used external
 
@@ -762,10 +819,10 @@ var Map = /*#__PURE__*/function () {
             gph.fillRectShape(rect);
             var texture = _this.scene.opponentData.planesCells[0] == cellNum || _this.scene.opponentData.planesCells[10] == cellNum ? 'fire-cap' : 'fire';
 
-            _this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6);
+            _this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom);
           } else {
             // Missed point
-            _this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.6);
+            _this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.4 * game.zoom);
           }
 
           game.gameData.turn.reverse();
@@ -790,7 +847,7 @@ var Map = /*#__PURE__*/function () {
         // stroke: '#000',
         // strokeThickness: 1,
         fontSize: "".concat(fontSize, "px")
-      }).setOrigin(0.5).setDepth(4);
+      }).setOrigin(0.5); // .setDepth(4);
     }
   }]);
 
@@ -1354,7 +1411,7 @@ var Players = /*#__PURE__*/function () {
 
       var shape = this.scene.add.graphics();
       shape.fillStyle(0x000000, 1);
-      shape.fillRoundedRect(x, y, width, height, 6);
+      shape.fillRoundedRect(x, y, width, height, 6 * game.zoom);
       var mask = shape.createGeometryMask(); // Add player image
 
       var img = this.scene.add.image(x, y, key).setDepth(4).setMask(mask).setOrigin(0);
@@ -1619,6 +1676,7 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _GameData__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../GameData */ "./src/js/GameData.js");
+/* harmony import */ var _components_Background__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Background */ "./src/js/components/Background.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1643,6 +1701,7 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
+
 var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
   _inherits(LoadScene, _Phaser$Scene);
 
@@ -1660,6 +1719,7 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
     key: "init",
     value: function init() {
       game.gameData = new _GameData__WEBPACK_IMPORTED_MODULE_0__["default"]();
+      this.cameras.main.setBackgroundColor('#fff');
     }
   }, {
     key: "preload",
@@ -1679,23 +1739,30 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.load.image('fire', 'assets/images/fire.png');
       this.load.image('fire-cap', 'assets/images/fire-cap.png');
       this.load.image('plane-1', 'assets/images/planes/plane-1.png');
-      this.load.image('plane-2', 'assets/images/planes/plane-2.png');
+      this.load.image('plane-2', 'assets/images/planes/plane-2.png'); // // Testing load scene
+      // for (let i = 0; i < 500; i++) {
+      //     this.load.image('plane-' + i, 'assets/images/planes/plane-2.png');
+      // }
+
       this.showPreloader();
     }
   }, {
     key: "showPreloader",
     value: function showPreloader() {
+      var _this = this;
+
       var scene = this;
+      var bg = new _components_Background__WEBPACK_IMPORTED_MODULE_1__["default"](scene);
       var fontStyle = {
-        fontFamily: 'Play',
-        fontSize: 28,
-        color: '#ffffff',
+        fontFamily: 'Righteous',
+        fontSize: 28 * game.zoom,
+        color: '#2d3748',
         stroke: '#fff',
         strokeThickness: 2,
         shadow: {
           offsetX: 1,
           offsetY: 1,
-          color: '#000',
+          color: '#fff',
           blur: 0,
           stroke: true,
           fill: true
@@ -1704,28 +1771,29 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
       var progressBar = scene.add.graphics();
       var progressBox = scene.add.graphics();
       progressBox.fillStyle(0x222222, 0.05);
-      progressBox.fillRect((game.config.width - 250) / 2, game.config.height / 2 + 40, 250, 50);
+      progressBox.fillRect((game.config.width - 250 * game.zoom) / 2, game.config.height / 2 + 40 * game.zoom, 250 * game.zoom, 50 * game.zoom);
       var width = scene.cameras.main.width;
       var height = scene.cameras.main.height;
       var loadingText = scene.make.text({
         x: width / 2,
-        y: height / 2 - 50,
+        y: height / 2 - 50 * game.zoom,
         text: 'Loading...',
         style: fontStyle
       });
       loadingText.setOrigin(0.5, 0.5);
       var percentText = scene.make.text({
         x: width / 2,
-        y: height / 2 - 5,
+        y: height / 2 - 5 * game.zoom,
         text: '0%',
         style: fontStyle
       });
       percentText.setOrigin(0.5, 0.5);
       scene.load.on('progress', function (value) {
         percentText.setText(parseInt(value * 100) + '%');
-        progressBar.clear();
-        progressBar.fillStyle(0xbf4689, 1);
-        progressBar.fillRect((game.config.width - 250) / 2 + 5, game.config.height / 2 + 50, 240 * value, 30);
+        progressBar.clear(); // progressBar.fillStyle(0xbf4689, 1);
+
+        progressBar.fillStyle(0x2d3748, 1);
+        progressBar.fillRect((game.config.width - 250 * game.zoom) / 2 + 5 * game.zoom, game.config.height / 2 + 50 * game.zoom, 240 * value * game.zoom, 30 * game.zoom);
       });
       scene.load.on('complete', function () {
         // console.log('preload done')
@@ -1733,6 +1801,8 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
         progressBox.destroy();
         loadingText.destroy();
         percentText.destroy(); //game.scene.start('Start');
+
+        _this.scene.stop();
 
         game.scene.start('SetPlaneScene');
       });
@@ -1829,25 +1899,21 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function create() {
       // console.log('main create');
       var background = new _components_Background__WEBPACK_IMPORTED_MODULE_2__["default"](this);
-      this.playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_1__["default"](this); //this.game.scene.getScene('SetPlaneScene').players.opponent
-
+      var playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_1__["default"](this);
+      var playerMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 - 32, 98, null, true);
+      var opponentMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 + 32 * 11, 98, 'opponent', true);
       this.socket.send({
         action: 'setOpponentData',
         opponentData: {
           planesCells: this.myPlanesCells
         }
-      }); // this.drawPlayerMap(40, 80);
-      // this.drawPlayerMap(440, 80, 'opponent');
-
-      var playerMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 - 32, 98, null, true);
-      var opponentMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 + 32 * 11, 98, 'opponent', true);
+      });
       this.drawPlanes();
       this.turn = game.gameData.turn;
-      this.turn.setScene(this); //console.log(this.turn);
+      this.turn.setScene(this);
+      this.printTerritoryText(); //console.log(this.turn);
       //debug
-      //window.Socket = Socket;
-
-      window.MainScene = this; // this.drawByCells(this.myPlanesCells);
+      // this.drawByCells(this.myPlanesCells);
     }
   }, {
     key: "drawPlanes",
@@ -1862,104 +1928,31 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 
         var planeImage = _this2.add.image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key).setAngle(plane.angle).setAlpha(0.9).setScale(game.zoom);
       });
-    } // drawPlayerMap(x, y, type = null) {
-    //     const sqareWidth = 40;
-    //     const cellsNum = 8;
-    //     for (let i = 0; i < cellsNum; i++) {
-    //         // Go vertical
-    //         for (let j = 0; j < cellsNum; j++) {
-    //             // Go horizontal
-    //             this.drawRect(
-    //                 x + j * sqareWidth,
-    //                 y + i * sqareWidth,
-    //                 sqareWidth,
-    //                 i,
-    //                 j,
-    //                 type
-    //             );
-    //         }
-    //     }
-    // }
-    // drawRect(x, y, sqareWidth, i, j, type) {
-    //     let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
-    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-    //     var graphics = this.add.graphics({
-    //         lineStyle: { width: 1, color: 0x0000aa },
-    //     });
-    //     graphics.strokeRectShape(rect);
-    //     graphics.setInteractive(
-    //         new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth),
-    //         Phaser.Geom.Rectangle.Contains
-    //     );
-    //     const owner = type === 'opponent' ? 'p' : 'o';
-    //     const id = `${owner}${j + 1}${i + 1}`;
-    //     this.cells[id] = { graphics, rect };
-    //     // graphics.setData('id', id);
-    //     graphics.on('pointerdown', () => {
-    //         if (type !== 'opponent') return;
-    //         if ($.isEmptyObject(this.opponentData)) {
-    //             console.log('opponent not ready yet');
-    //             return;
-    //         }
-    //         if (!this.turn.isMyTurn) {
-    //             //console.log('not my turn');
-    //             game.gameData.turn.scaleText();
-    //             return;
-    //         }
-    //         this.socket.send({
-    //             action: 'attack',
-    //             cellClicked: id,
-    //         });
-    //         const cellNum = `${j + 1}${i + 1}`;
-    //         if (this.opponentData.planesCells.includes(cellNum)) {
-    //             // Targeted point
-    //             graphics = this.add.graphics({
-    //                 fillStyle: { color: 0x800000 },
-    //             });
-    //             graphics.fillRectShape(rect);
-    //             const texture =
-    //                 this.opponentData.planesCells[0] == cellNum ||
-    //                 this.opponentData.planesCells[10] == cellNum
-    //                     ? 'fire-cap'
-    //                     : 'fire';
-    //             this.add
-    //                 .image(rect.centerX, rect.centerY, texture)
-    //                 .setScale(0.8);
-    //         } else {
-    //             // Missed point
-    //             this.add.image(rect.centerX, rect.centerY, 'x').setScale(0.8);
-    //         }
-    //         game.gameData.turn.reverse();
-    //     });
-    // }
-    // drawSceneBackground() {
-    //     const x = 0;
-    //     const y = 0;
-    //     const sqareWidth = 40;
-    //     const cellsNum = 20;
-    //     for (let i = 0; i < cellsNum; i++) {
-    //         // Go vertical
-    //         for (let j = 0; j < cellsNum; j++) {
-    //             // Go horizontal
-    //             this.drawBgRect(
-    //                 x + j * sqareWidth,
-    //                 y + i * sqareWidth,
-    //                 sqareWidth,
-    //                 i,
-    //                 j
-    //             );
-    //         }
-    //     }
-    // }
-    // drawBgRect(x, y, sqareWidth, i, j) {
-    //     let rect = new Phaser.Geom.Rectangle(x, y, sqareWidth, sqareWidth);
-    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-    //     var graphics = this.add.graphics({
-    //         lineStyle: { width: 1, color: 0xeeeeee },
-    //     });
-    //     graphics.strokeRectShape(rect);
-    // }
-
+    }
+  }, {
+    key: "printTerritoryText",
+    value: function printTerritoryText() {
+      var gameWidth = game.opts.defaultWidth;
+      var x1 = gameWidth / 4 + game.opts.cellSize / 2 * game.zoom;
+      var x2 = gameWidth - gameWidth / 4;
+      var y = game.opts.defaultHeight - 20;
+      this.printText(x1, y, 'Your territory');
+      this.printText(x2, y, 'Opponent territory');
+    }
+  }, {
+    key: "printText",
+    value: function printText(x, y, text) {
+      x = x * game.zoom;
+      y = y * game.zoom;
+      var fontSize = 14 * game.zoom;
+      this.add.text(x, y, text, {
+        color: '#424242',
+        fontFamily: 'Righteous',
+        // stroke: '#000',
+        // strokeThickness: 1,
+        fontSize: "".concat(fontSize, "px")
+      }).setOrigin(0.5).setAlpha(0.7);
+    }
   }]);
 
   return MainScene;
@@ -2029,22 +2022,18 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
   var _super = _createSuper(SetPlaneScene);
 
   function SetPlaneScene() {
-    var _this;
-
     _classCallCheck(this, SetPlaneScene);
 
-    _this = _super.call(this, {
+    return _super.call(this, {
       key: 'SetPlaneScene',
       physics: {
         arcade: {//debug: true,
         }
       }
     }); //this.cellSize = 40;
-
-    _this.cells = [];
-    _this.planes = {};
-    _this.planesGameObjects = [];
-    return _this;
+    // this.cells = [];
+    // this.planes = {};
+    // this.planesGameObjects = [];
   }
 
   _createClass(SetPlaneScene, [{
@@ -2055,7 +2044,10 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "create",
     value: function create() {
-      // this.drawSceneBackground();
+      this.cells = [];
+      this.planes = {};
+      this.planesGameObjects = []; // this.drawSceneBackground();
+
       var background = new _components_Background__WEBPACK_IMPORTED_MODULE_0__["default"](this); // // Setup players
       //this.players = new Players(this);
       // const x = 120;
@@ -2112,14 +2104,14 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "addStartGame",
     value: function addStartGame() {
-      var _this2 = this;
+      var _this = this;
 
       this.add.image(630 * game.zoom, 384 * game.zoom, 'btn-start-game').setScale(game.zoom).setInteractive({
         useHandCursor: true
       }).on('pointerup', function () {
         // let heads = [];
         var allPlanesCells = [];
-        var keys = Object.keys(_this2.planes);
+        var keys = Object.keys(_this.planes);
         var keysLength = keys.length;
 
         if (keysLength < 2) {
@@ -2129,16 +2121,16 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
 
         for (var i = 0; i < keysLength; i++) {
           //heads.push(this.planes[keys[i]].cells[0]);
-          allPlanesCells = [].concat(_toConsumableArray(allPlanesCells), _toConsumableArray(_this2.planes[keys[i]].cells));
+          allPlanesCells = [].concat(_toConsumableArray(allPlanesCells), _toConsumableArray(_this.planes[keys[i]].cells));
         } //console.log(this.planes);
 
 
-        _this2.scene.stop();
+        _this.scene.stop();
 
-        _this2.scene.start('MainScene', {
+        _this.scene.start('MainScene', {
           planesData: {
             cells: allPlanesCells,
-            planes: _this2.planes
+            planes: _this.planes
           }
         });
       });
@@ -2147,18 +2139,18 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "drawByCells",
     value: function drawByCells(cells) {
-      var _this3 = this;
+      var _this2 = this;
 
       cells.forEach(function (cl) {
         //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-        var graphics = _this3.add.graphics({
+        var graphics = _this2.add.graphics({
           lineStyle: {
             width: 3,
             color: 0x000000
           }
         });
 
-        graphics.strokeRectShape(_this3.cells[cl].rect);
+        graphics.strokeRectShape(_this2.cells[cl].rect);
       });
     } // drawPlayerMap(x, y) {
     //     const squareWidth = this.cellSize;

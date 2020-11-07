@@ -16,10 +16,10 @@ class SetPlaneScene extends Phaser.Scene {
         });
 
         //this.cellSize = 40;
-        this.cells = [];
+        // this.cells = [];
 
-        this.planes = {};
-        this.planesGameObjects = [];
+        // this.planes = {};
+        // this.planesGameObjects = [];
     }
 
     init() {
@@ -27,6 +27,10 @@ class SetPlaneScene extends Phaser.Scene {
     }
 
     create() {
+        this.cells = [];
+        this.planes = {};
+        this.planesGameObjects = [];
+
         // this.drawSceneBackground();
         const background = new Background(this);
 

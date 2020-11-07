@@ -29,6 +29,9 @@ if (mix.inProduction()) {
 
 mix.webpackConfig({
     plugins: webPackPlugins,
+    devServer: {
+        port: '8079',
+    },
 });
 
 // mix.webpackConfig({

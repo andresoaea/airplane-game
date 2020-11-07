@@ -115,12 +115,12 @@ class Map {
 
                     this.scene.add
                         .image(rect.centerX, rect.centerY, texture)
-                        .setScale(0.6);
+                        .setScale(0.6 * game.zoom);
                 } else {
                     // Missed point
                     this.scene.add
                         .image(rect.centerX, rect.centerY, 'x')
-                        .setScale(0.6);
+                        .setScale(0.4 * game.zoom);
                 }
 
                 game.gameData.turn.reverse();
@@ -142,8 +142,8 @@ class Map {
                 // strokeThickness: 1,
                 fontSize: `${fontSize}px`,
             })
-            .setOrigin(0.5)
-            .setDepth(4);
+            .setOrigin(0.5);
+        // .setDepth(4);
     }
 }
 
