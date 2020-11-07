@@ -1,5 +1,21 @@
-ul[data-v-580e046a] {
+ul[data-v-580e046a]:not(.room-generated) {
   display: inherit;
+}
+ul li span[data-v-580e046a] {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #eee;
+  border-radius: 2px;
+}
+ul li i[data-v-580e046a] {
+  text-align: center;
+  font-size: 23px;
+  margin: 3px 0;
+  cursor: pointer;
+  color: #2d3748;
 }@charset "UTF-8";
 
 /*!
@@ -31084,6 +31100,10 @@ video {
           animation: bounce 1s infinite;
 }
 
+body {
+  font-family: "Righteous", sans-serif;
+}
+
 button:focus {
   outline: none;
 }
@@ -31106,7 +31126,7 @@ button:focus {
 }
 
 .scene-html {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.9);
 }
 
 .scene-html > div {

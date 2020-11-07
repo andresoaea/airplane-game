@@ -32,15 +32,18 @@ class Socket {
 
         switch (msg.action) {
             case 'setMyRoom':
-                game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
+                //game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
+                game.bus.$emit('ShowMyRoomId', msg.room);
                 game.gameData.turn.setIsMyTurn(true);
                 break;
             case 'invalidRoom':
-                game.scene.getScene('SetOpponentScene').printInvalidRoom();
+                //game.scene.getScene('SetOpponentScene').printInvalidRoom();
+                game.bus.$emit('PrintInvalidRoom');
                 break;
             case 'enterToRoom':
                 game.gameData.setOpponent(msg.opponent);
-                game.scene.getScene('SetOpponentScene').startRoom(msg.room);
+                //game.scene.getScene('SetOpponentScene').startRoom(msg.room);
+                game.bus.$emit('StartRoom', msg.room);
                 break;
             case 'opponentDisconnected':
                 this.doOpponentDisconnected(msg);

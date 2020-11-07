@@ -40,11 +40,28 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "set-opponent",
   data: function data() {
     return {
-      show: true,
+      show: false,
+      toShow: "initRoom",
       codes: [{
         val: 0
       }, {
@@ -53,14 +70,40 @@ __webpack_require__.r(__webpack_exports__);
         val: 0
       }, {
         val: 0
-      }]
+      }],
+      roomCode: "0000",
+      roomError: false
     };
   },
   mounted: function mounted() {
     var _this = this;
 
     game.bus.$on("showSetOpponent", function () {
-      return _this.show = true;
+      _this.codes.map(function (code) {
+        return code.val = 0;
+      });
+
+      _this.toShow = "initRoom";
+      _this.show = true;
+    });
+    game.bus.$on("ShowMyRoomId", function (roomCode) {
+      _this.roomCode = roomCode;
+      _this.toShow = "roomCode";
+    });
+    game.bus.$on("PrintInvalidRoom", function () {
+      _this.roomError = true;
+      setTimeout(function () {
+        _this.roomError = false;
+      }, 2000);
+    });
+    game.bus.$on("StartRoom", function (roomToStart) {
+      if (roomToStart == _this.roomCode) {
+        // This is the room initiator player
+        _this.printOpponentConnected();
+      } else {
+        // This is the opponent
+        _this.show = false;
+      }
     });
   },
   methods: {
@@ -70,10 +113,21 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     goToRoom: function goToRoom() {
-      var roomCode = this.codes.map(function (code) {
+      if (this.roomError) return;
+      var roomToGo = this.codes.map(function (code) {
         return code.val;
       }).join("");
-      console.log(roomCode);
+
+      if (roomToGo == this.roomCode) {
+        game.bus.$emit("PrintInvalidRoom");
+        return;
+      }
+
+      game.gameData.turn.setIsMyTurn(false);
+      game.scene.getScene("SetPlaneScene").socket.send({
+        action: "goToRoom",
+        room: roomToGo
+      });
     },
     increaseNum: function increaseNum(key) {
       if (this.codes[key].val >= 9) return;
@@ -82,6 +136,23 @@ __webpack_require__.r(__webpack_exports__);
     decreaseNum: function decreaseNum(key) {
       if (this.codes[key].val <= 0) return;
       this.codes[key].val--;
+    },
+    goBack: function goBack() {
+      this.toShow = "initRoom";
+    },
+    printOpponentConnected: function printOpponentConnected() {
+      var _this2 = this;
+
+      Swal.fire({
+        title: "Let's go!",
+        text: "Opponent connected",
+        icon: "success",
+        showConfirmButton: false,
+        timer: 2000
+      }).then(function () {
+        //console.log("execute then");
+        _this2.show = false;
+      });
     }
   }
 });
@@ -126,96 +197,161 @@ var render = function() {
             "div",
             {
               staticClass:
-                "flex items-center rounded animate__animated animate__backInDown"
+                "flex items-center justify-center text-center rounded animate__animated animate__backInDown"
             },
             [
-              _c("div", { staticClass: "flex w-full" }, [
-                _c(
-                  "div",
-                  {
-                    staticClass:
-                      "col-create-room flex flex-1 justify-center items-center flex-col"
-                  },
-                  [
-                    _c("p", { staticClass: "text-gray-800 mb-2" }, [
-                      _vm._v("Create a room")
-                    ]),
+              _vm.toShow === "initRoom"
+                ? _c("div", { staticClass: "flex w-full" }, [
+                    _c(
+                      "div",
+                      {
+                        staticClass:
+                          "col-create-room flex flex-1 justify-center items-center flex-col"
+                      },
+                      [
+                        _c("p", { staticClass: "text-gray-700 mb-2" }, [
+                          _vm._v("Create a room")
+                        ]),
+                        _vm._v(" "),
+                        _c(
+                          "button",
+                          {
+                            staticClass:
+                              "bg-pink-700 px-4 py-2 text-white rounded",
+                            on: {
+                              click: function($event) {
+                                return _vm.createRoom()
+                              }
+                            }
+                          },
+                          [_vm._v("Create")]
+                        )
+                      ]
+                    ),
                     _vm._v(" "),
                     _c(
-                      "button",
+                      "div",
                       {
-                        staticClass: "bg-pink-700 px-4 py-2 text-white rounded",
-                        on: {
-                          click: function($event) {
-                            return _vm.createRoom()
-                          }
-                        }
+                        staticClass:
+                          "col-go-to-room flex flex-1 justify-center items-center flex-col"
                       },
-                      [_vm._v("Create")]
+                      [
+                        _c("p", { staticClass: "text-gray-700 mb-2" }, [
+                          _vm._v("Go to a room")
+                        ]),
+                        _vm._v(" "),
+                        _c(
+                          "ul",
+                          _vm._l(_vm.codes, function(code, i) {
+                            return _c(
+                              "li",
+                              { key: i, staticClass: "flex flex-col mx-1" },
+                              [
+                                _c("i", {
+                                  staticClass: "fa fa-plus",
+                                  attrs: { "aria-hidden": "true" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.increaseNum(i)
+                                    }
+                                  }
+                                }),
+                                _vm._v(" "),
+                                _c("span", { staticClass: "bg-gray-800" }, [
+                                  _vm._v(_vm._s(_vm.codes[i].val))
+                                ]),
+                                _vm._v(" "),
+                                _c("i", {
+                                  staticClass: "fa fa-minus",
+                                  attrs: { "aria-hidden": "true" },
+                                  on: {
+                                    click: function($event) {
+                                      return _vm.decreaseNum(i)
+                                    }
+                                  }
+                                })
+                              ]
+                            )
+                          }),
+                          0
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "button",
+                          {
+                            staticClass:
+                              "bg-blue-700 mt-1 px-4 py-2 text-white rounded",
+                            on: {
+                              click: function($event) {
+                                return _vm.goToRoom()
+                              }
+                            }
+                          },
+                          [_vm._v("Go play")]
+                        ),
+                        _vm._v(" "),
+                        _vm.roomError
+                          ? _c(
+                              "div",
+                              { staticClass: "room-error text-center mt-2" },
+                              [
+                                _c("p", { staticClass: "text-red-600" }, [
+                                  _vm._v("Invalid room code..")
+                                ]),
+                                _vm._v(" "),
+                                _c(
+                                  "p",
+                                  { staticClass: "text-red-600 text-xs" },
+                                  [_vm._v("Try again with another code.")]
+                                )
+                              ]
+                            )
+                          : _vm._e()
+                      ]
                     )
-                  ]
-                ),
-                _vm._v(" "),
-                _c(
-                  "div",
-                  {
-                    staticClass:
-                      "col-go-to-room flex flex-1 justify-center items-center flex-col"
-                  },
-                  [
-                    _c("p", { staticClass: "text-gray-800 mb-2" }, [
-                      _vm._v("Go to a room")
+                  ])
+                : _vm._e(),
+              _vm._v(" "),
+              _vm.toShow === "roomCode"
+                ? _c("div", [
+                    _c("p", { staticClass: "text-gray-700" }, [
+                      _vm._v("Your opponent can connect to this room code:")
                     ]),
                     _vm._v(" "),
                     _c(
                       "ul",
-                      _vm._l(_vm.codes, function(code, i) {
-                        return _c(
-                          "li",
-                          { key: i, staticClass: "flex flex-col mx-10" },
-                          [
-                            _c("i", {
-                              staticClass: "fa fa-caret-up",
-                              attrs: { "aria-hidden": "true" },
-                              on: {
-                                click: function($event) {
-                                  return _vm.increaseNum(i)
-                                }
-                              }
-                            }),
-                            _vm._v(" "),
-                            _c("span", [_vm._v(_vm._s(_vm.codes[i].val))]),
-                            _vm._v(" "),
-                            _c("i", {
-                              staticClass: "fa fa-caret-down",
-                              attrs: { "aria-hidden": "true" },
-                              on: {
-                                click: function($event) {
-                                  return _vm.decreaseNum(i)
-                                }
-                              }
-                            })
-                          ]
-                        )
+                      {
+                        staticClass: "room-generated flex justify-center my-3"
+                      },
+                      _vm._l(_vm.roomCode.split(""), function(num) {
+                        return _c("li", { staticClass: "mx-1" }, [
+                          _c("span", { staticClass: "bg-gray-800" }, [
+                            _vm._v(_vm._s(num))
+                          ])
+                        ])
                       }),
                       0
                     ),
                     _vm._v(" "),
+                    _c("small", { staticClass: "text-green-600 mt-2" }, [
+                      _vm._v("Waiting for opponent to connect...")
+                    ]),
+                    _vm._v(" "),
                     _c(
                       "button",
                       {
-                        staticClass: "bg-blue-700 px-4 py-2 text-white rounded",
+                        staticClass:
+                          "go-back bg-blue-700 block mx-auto mt-4 px-4 py-2 text-white rounded",
                         on: {
                           click: function($event) {
-                            return _vm.goToRoom()
+                            return _vm.goBack()
                           }
                         }
                       },
-                      [_vm._v("Go play")]
+                      [_vm._v("Go back")]
                     )
-                  ]
-                )
-              ])
+                  ])
+                : _vm._e()
             ]
           )
         ]
@@ -360,17 +496,20 @@ var Socket = /*#__PURE__*/function () {
 
       switch (msg.action) {
         case 'setMyRoom':
-          game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
+          //game.scene.getScene('SetOpponentScene').showMyRoomId(msg.room);
+          game.bus.$emit('ShowMyRoomId', msg.room);
           game.gameData.turn.setIsMyTurn(true);
           break;
 
         case 'invalidRoom':
-          game.scene.getScene('SetOpponentScene').printInvalidRoom();
+          //game.scene.getScene('SetOpponentScene').printInvalidRoom();
+          game.bus.$emit('PrintInvalidRoom');
           break;
 
         case 'enterToRoom':
-          game.gameData.setOpponent(msg.opponent);
-          game.scene.getScene('SetOpponentScene').startRoom(msg.room);
+          game.gameData.setOpponent(msg.opponent); //game.scene.getScene('SetOpponentScene').startRoom(msg.room);
+
+          game.bus.$emit('StartRoom', msg.room);
           break;
 
         case 'opponentDisconnected':
