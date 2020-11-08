@@ -590,23 +590,39 @@ var Socket = /*#__PURE__*/function () {
   }, {
     key: "doAttack",
     value: function doAttack(msg) {
+      var _this2 = this;
+
       var cellId = msg.cellClicked;
       if (!cellId) return;
+      var isHit = false;
       var cellNum = cellId.replace('p', '');
       var rect = this.scene.cells[cellId.replace('p', 'o')].rect;
+      game.gameData.turn.printAttackedText(cellNum);
+      Object.keys(this.scene.myPlanes).forEach(function (planeKey) {
+        var currPlane = _this2.scene.myPlanes[planeKey].instance; // console.log(currPlane);
 
-      if (this.scene.myPlanesCells.includes(cellNum)) {
-        // Targeted point
-        var texture = this.scene.myPlanesCells[0] == cellNum || this.scene.myPlanesCells[10] == cellNum ? 'fire-cap' : 'fire';
-        this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom);
-      } else {
+        if (currPlane.planeCells.includes(cellNum)) {
+          // Targeted point
+          var headHitted = cellNum == currPlane.headCell;
+          var texture = headHitted ? 'fire-cap' : 'fire';
+
+          _this2.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom); // Delete cell from plane cells
+
+
+          currPlane.planeCells.splice(currPlane.planeCells.indexOf(cellNum), 1); // console.log(currPlane.planeCells.length);
+
+          if (currPlane.planeCells.length === 0) {
+            console.log('full discovered plane');
+          }
+
+          isHit = true;
+        }
+      });
+
+      if (!isHit) {
         // Missed point
         this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.4 * game.zoom);
-      } // const graphics = this.scene.add.graphics({
-      //     fillStyle: { color },
-      // });
-      // graphics.fillRectShape(this.scene.cells[cellId.replace('p', 'o')].rect);
-
+      }
     }
   }, {
     key: "doOpponentDisconnected",
@@ -719,6 +735,7 @@ var Map = /*#__PURE__*/function () {
     this.x = x * game.zoom;
     this.y = y * game.zoom;
     this.isMainScene = isMainScene;
+    this.attackedCells = [];
     this.drawMap();
   }
 
@@ -801,31 +818,50 @@ var Map = /*#__PURE__*/function () {
             return;
           }
 
+          var cellNum = "".concat(j + 1).concat(i + 1);
+
+          if (_this.attackedCells.includes(cellNum)) {
+            console.log('Already attacked this target');
+            return;
+          }
+
           _this.scene.socket.send({
             action: 'attack',
             cellClicked: id
           });
 
-          var cellNum = "".concat(j + 1).concat(i + 1);
+          var isHit = false;
+          var opponentPlanes = _this.scene.opponentData.planes;
+          Object.keys(opponentPlanes).forEach(function (planeKey) {
+            var currPlane = opponentPlanes[planeKey];
 
-          if (_this.scene.opponentData.planesCells.includes(cellNum)) {
-            // Targeted point
-            var gph = _this.scene.add.graphics({
-              fillStyle: {
-                color: 0x800000
-              }
-            });
+            if (currPlane.cells.includes(cellNum)) {
+              // Targeted point
+              var gph = _this.scene.add.graphics({
+                fillStyle: {
+                  color: 0x800000
+                }
+              });
 
-            gph.fillRectShape(rect);
-            var texture = _this.scene.opponentData.planesCells[0] == cellNum || _this.scene.opponentData.planesCells[10] == cellNum ? 'fire-cap' : 'fire';
+              gph.fillRectShape(rect);
+              var texture = cellNum == currPlane.head ? 'fire-cap' : 'fire';
 
-            _this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom);
-          } else {
+              _this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom);
+
+              isHit = true;
+            }
+          });
+
+          if (!isHit) {
             // Missed point
             _this.scene.add.image(rect.centerX, rect.centerY, 'x').setScale(0.4 * game.zoom);
           }
 
-          game.gameData.turn.reverse();
+          _this.attackedCells.push(cellNum);
+
+          setTimeout(function () {
+            game.gameData.turn.reverse();
+          }, 2000);
         });
       } else {
         // Rect in SetPlaneScene
@@ -1154,7 +1190,8 @@ var Plane = /*#__PURE__*/function (_Phaser$GameObjects$S) {
       } // console.log(planeCells);
 
 
-      this.planeCells = planeCells; // Push current plane to planes object
+      this.planeCells = planeCells;
+      this.headCell = headCellId; // Push current plane to planes object
 
       var currPlaneExists = Object.keys(this.scene.planes).includes(this.planeName);
 
@@ -1497,6 +1534,23 @@ var Turn = /*#__PURE__*/function () {
         strokeThickness: 1,
         fontSize: "".concat(fontSize, "px")
       }).setOrigin(0.5).setDepth(4);
+    }
+  }, {
+    key: "printAttackedText",
+    value: function printAttackedText(cellNum) {
+      var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+      var splitted = cellNum.split('');
+      var point = letters[splitted[1] - 1].toUpperCase() + splitted[0];
+      this.text.setText("Opponent attacked ".concat(point)).setColor('#fff');
+      var tween = this.scene.tweens.add({
+        targets: [this.text],
+        scaleX: 1.5,
+        scaleY: 1.5,
+        duration: 400,
+        yoyo: true,
+        onComplete: function onComplete() {//   this.text.setColor('#fff').setScale(1);
+        }
+      });
     }
   }, {
     key: "updateTurnText",
@@ -1877,9 +1931,9 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   _createClass(MainScene, [{
     key: "init",
     value: function init(data) {
-      this.myPlanesCells = data.planesData.cells;
-      this.myPlanes = data.planesData.planes; //console.log(this.myPlanesCells);
-      // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
+      //this.myPlanesCells = data.planesData.cells;
+      this.myPlanes = data.planesData.planes;
+      console.log(this.myPlanes); // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
 
       this.cameras.main.setBackgroundColor('#fff');
     } //debug
@@ -1897,16 +1951,35 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "create",
     value: function create() {
+      var _this2 = this;
+
       // console.log('main create');
       var background = new _components_Background__WEBPACK_IMPORTED_MODULE_2__["default"](this);
       var playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_1__["default"](this);
       var playerMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 - 32, 98, null, true);
-      var opponentMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 + 32 * 11, 98, 'opponent', true);
+      var opponentMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 + 32 * 11, 98, 'opponent', true); // Extract neccesarry data to send as opponent data
+
+      var dataToSend = {
+        planes: {}
+      };
+      Object.keys(this.myPlanes).forEach(function (planeKey) {
+        var currPlane = _this2.myPlanes[planeKey]; // console.log(currPlane);
+
+        dataToSend.planes[planeKey] = {
+          cells: currPlane.instance.planeCells,
+          head: currPlane.instance.headCell
+        };
+      }); // this.socket.send({
+      //     action: 'setOpponentData',
+      //     opponentData: {
+      //         planesCells: this.myPlanesCells,
+      //     },
+      // });
+      // Send data to opponent
+
       this.socket.send({
         action: 'setOpponentData',
-        opponentData: {
-          planesCells: this.myPlanesCells
-        }
+        opponentData: dataToSend
       });
       this.drawPlanes();
       this.turn = game.gameData.turn;
@@ -1918,15 +1991,15 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "drawPlanes",
     value: function drawPlanes() {
-      var _this2 = this;
+      var _this3 = this;
 
       // console.log(this.myPlanes);
       Object.keys(this.myPlanes).forEach(function (planeKey) {
         var playerMapLeftDiff = game.opts.cellSize; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
 
-        var plane = _this2.myPlanes[planeKey].instance;
+        var plane = _this3.myPlanes[planeKey].instance;
 
-        var planeImage = _this2.add.image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key).setAngle(plane.angle).setAlpha(0.9).setScale(game.zoom);
+        var planeImage = _this3.add.image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key).setAngle(plane.angle).setAlpha(0.9).setScale(game.zoom);
       });
     }
   }, {
@@ -1977,18 +2050,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_Plane__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/Plane */ "./src/js/components/Plane.js");
 /* harmony import */ var _Socket__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../Socket */ "./src/js/Socket.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -2109,27 +2170,30 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.add.image(630 * game.zoom, 384 * game.zoom, 'btn-start-game').setScale(game.zoom).setInteractive({
         useHandCursor: true
       }).on('pointerup', function () {
-        // let heads = [];
-        var allPlanesCells = [];
+        //// let heads = [];
+        //let allPlanesCells = [];
         var keys = Object.keys(_this.planes);
         var keysLength = keys.length;
 
         if (keysLength < 2) {
           // add 2 planes
+          console.log('Add 2 planes to map');
           return;
-        }
-
-        for (var i = 0; i < keysLength; i++) {
-          //heads.push(this.planes[keys[i]].cells[0]);
-          allPlanesCells = [].concat(_toConsumableArray(allPlanesCells), _toConsumableArray(_this.planes[keys[i]].cells));
-        } //console.log(this.planes);
+        } // for (let i = 0; i < keysLength; i++) {
+        //     //heads.push(this.planes[keys[i]].cells[0]);
+        //     allPlanesCells = [
+        //         ...allPlanesCells,
+        //         ...this.planes[keys[i]].cells,
+        //     ];
+        // }
+        //console.log(this.planes);
 
 
         _this.scene.stop();
 
         _this.scene.start('MainScene', {
           planesData: {
-            cells: allPlanesCells,
+            //cells: allPlanesCells,
             planes: _this.planes
           }
         });

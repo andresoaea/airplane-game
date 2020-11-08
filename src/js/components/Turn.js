@@ -37,6 +37,23 @@ class Turn {
             .setDepth(4);
     }
 
+    printAttackedText(cellNum) {
+        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
+        const splitted = cellNum.split('');
+        const point = letters[splitted[1] - 1].toUpperCase() + splitted[0];
+        this.text.setText(`Opponent attacked ${point}`).setColor('#fff');
+        const tween = this.scene.tweens.add({
+            targets: [this.text],
+            scaleX: 1.5,
+            scaleY: 1.5,
+            duration: 400,
+            yoyo: true,
+            onComplete: () => {
+                //   this.text.setColor('#fff').setScale(1);
+            },
+        });
+    }
+
     updateTurnText() {
         setTimeout(() => {
             const color = this.isMyTurn ? '#0a9c00' : '#f79e0f';

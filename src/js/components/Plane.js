@@ -275,6 +275,7 @@ class Plane extends Phaser.GameObjects.Sprite {
 
         // console.log(planeCells);
         this.planeCells = planeCells;
+        this.headCell = headCellId;
 
         // Push current plane to planes object
         const currPlaneExists = Object.keys(this.scene.planes).includes(

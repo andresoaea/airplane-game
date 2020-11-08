@@ -66,31 +66,46 @@ class Socket {
         const cellId = msg.cellClicked;
         if (!cellId) return;
 
+        let isHit = false;
         const cellNum = cellId.replace('p', '');
         const rect = this.scene.cells[cellId.replace('p', 'o')].rect;
 
-        if (this.scene.myPlanesCells.includes(cellNum)) {
-            // Targeted point
-            const texture =
-                this.scene.myPlanesCells[0] == cellNum ||
-                this.scene.myPlanesCells[10] == cellNum
-                    ? 'fire-cap'
-                    : 'fire';
-            this.scene.add
-                .image(rect.centerX, rect.centerY, texture)
-                .setScale(0.6 * game.zoom);
-        } else {
+        game.gameData.turn.printAttackedText(cellNum);
+
+        Object.keys(this.scene.myPlanes).forEach((planeKey) => {
+            const currPlane = this.scene.myPlanes[planeKey].instance;
+            // console.log(currPlane);
+
+            if (currPlane.planeCells.includes(cellNum)) {
+                // Targeted point
+                const headHitted = cellNum == currPlane.headCell;
+                const texture = headHitted ? 'fire-cap' : 'fire';
+
+                this.scene.add
+                    .image(rect.centerX, rect.centerY, texture)
+                    .setScale(0.6 * game.zoom);
+
+                // Delete cell from plane cells
+                currPlane.planeCells.splice(
+                    currPlane.planeCells.indexOf(cellNum),
+                    1
+                );
+
+                // console.log(currPlane.planeCells.length);
+                if (currPlane.planeCells.length === 0) {
+                    console.log('full discovered plane');
+                }
+
+                isHit = true;
+            }
+        });
+
+        if (!isHit) {
             // Missed point
             this.scene.add
                 .image(rect.centerX, rect.centerY, 'x')
                 .setScale(0.4 * game.zoom);
         }
-
-        // const graphics = this.scene.add.graphics({
-        //     fillStyle: { color },
-        // });
-
-        // graphics.fillRectShape(this.scene.cells[cellId.replace('p', 'o')].rect);
     }
 
     doOpponentDisconnected(msg) {

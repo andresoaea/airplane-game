@@ -14,9 +14,9 @@ class MainScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.myPlanesCells = data.planesData.cells;
+        //this.myPlanesCells = data.planesData.cells;
         this.myPlanes = data.planesData.planes;
-        //console.log(this.myPlanesCells);
+        console.log(this.myPlanes);
         // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
         this.cameras.main.setBackgroundColor('#fff');
     }
@@ -43,11 +43,28 @@ class MainScene extends Phaser.Scene {
         const playerMap = new Map(this, 96 - 32, 98, null, true);
         const opponentMap = new Map(this, 96 + 32 * 11, 98, 'opponent', true);
 
+        // Extract neccesarry data to send as opponent data
+        const dataToSend = { planes: {} };
+        Object.keys(this.myPlanes).forEach((planeKey) => {
+            const currPlane = this.myPlanes[planeKey];
+            // console.log(currPlane);
+            dataToSend.planes[planeKey] = {
+                cells: currPlane.instance.planeCells,
+                head: currPlane.instance.headCell,
+            };
+        });
+
+        // this.socket.send({
+        //     action: 'setOpponentData',
+        //     opponentData: {
+        //         planesCells: this.myPlanesCells,
+        //     },
+        // });
+
+        // Send data to opponent
         this.socket.send({
             action: 'setOpponentData',
-            opponentData: {
-                planesCells: this.myPlanesCells,
-            },
+            opponentData: dataToSend,
         });
 
         this.drawPlanes();

@@ -5,6 +5,7 @@ class Map {
         this.x = x * game.zoom;
         this.y = y * game.zoom;
         this.isMainScene = isMainScene;
+        this.attackedCells = [];
 
         this.drawMap();
     }
@@ -94,36 +95,54 @@ class Map {
                     return;
                 }
 
+                const cellNum = `${j + 1}${i + 1}`;
+
+                if (this.attackedCells.includes(cellNum)) {
+                    console.log('Already attacked this target');
+                    return;
+                }
+
                 this.scene.socket.send({
                     action: 'attack',
                     cellClicked: id,
                 });
 
-                const cellNum = `${j + 1}${i + 1}`;
-                if (this.scene.opponentData.planesCells.includes(cellNum)) {
-                    // Targeted point
-                    let gph = this.scene.add.graphics({
-                        fillStyle: { color: 0x800000 },
-                    });
-                    gph.fillRectShape(rect);
+                let isHit = false;
+                const opponentPlanes = this.scene.opponentData.planes;
 
-                    const texture =
-                        this.scene.opponentData.planesCells[0] == cellNum ||
-                        this.scene.opponentData.planesCells[10] == cellNum
-                            ? 'fire-cap'
-                            : 'fire';
+                Object.keys(opponentPlanes).forEach((planeKey) => {
+                    const currPlane = opponentPlanes[planeKey];
 
-                    this.scene.add
-                        .image(rect.centerX, rect.centerY, texture)
-                        .setScale(0.6 * game.zoom);
-                } else {
+                    if (currPlane.cells.includes(cellNum)) {
+                        // Targeted point
+                        let gph = this.scene.add.graphics({
+                            fillStyle: { color: 0x800000 },
+                        });
+                        gph.fillRectShape(rect);
+
+                        const texture =
+                            cellNum == currPlane.head ? 'fire-cap' : 'fire';
+
+                        this.scene.add
+                            .image(rect.centerX, rect.centerY, texture)
+                            .setScale(0.6 * game.zoom);
+
+                        isHit = true;
+                    }
+                });
+
+                if (!isHit) {
                     // Missed point
                     this.scene.add
                         .image(rect.centerX, rect.centerY, 'x')
                         .setScale(0.4 * game.zoom);
                 }
 
-                game.gameData.turn.reverse();
+                this.attackedCells.push(cellNum);
+
+                setTimeout(() => {
+                    game.gameData.turn.reverse();
+                }, 2000);
             });
         } else {
             // Rect in SetPlaneScene

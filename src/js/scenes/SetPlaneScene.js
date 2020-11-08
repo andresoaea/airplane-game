@@ -111,31 +111,32 @@ class SetPlaneScene extends Phaser.Scene {
             .setScale(game.zoom)
             .setInteractive({ useHandCursor: true })
             .on('pointerup', () => {
-                // let heads = [];
-                let allPlanesCells = [];
+                //// let heads = [];
+                //let allPlanesCells = [];
 
                 let keys = Object.keys(this.planes);
                 let keysLength = keys.length;
 
                 if (keysLength < 2) {
                     // add 2 planes
+                    console.log('Add 2 planes to map');
                     return;
                 }
 
-                for (let i = 0; i < keysLength; i++) {
-                    //heads.push(this.planes[keys[i]].cells[0]);
-                    allPlanesCells = [
-                        ...allPlanesCells,
-                        ...this.planes[keys[i]].cells,
-                    ];
-                }
+                // for (let i = 0; i < keysLength; i++) {
+                //     //heads.push(this.planes[keys[i]].cells[0]);
+                //     allPlanesCells = [
+                //         ...allPlanesCells,
+                //         ...this.planes[keys[i]].cells,
+                //     ];
+                // }
 
                 //console.log(this.planes);
 
                 this.scene.stop();
                 this.scene.start('MainScene', {
                     planesData: {
-                        cells: allPlanesCells,
+                        //cells: allPlanesCells,
                         planes: this.planes,
                     },
                 });
