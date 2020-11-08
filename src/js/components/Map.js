@@ -140,9 +140,7 @@ class Map {
 
                 this.attackedCells.push(cellNum);
 
-                setTimeout(() => {
-                    game.gameData.turn.reverse();
-                }, 2000);
+                game.gameData.turn.reverse();
             });
         } else {
             // Rect in SetPlaneScene

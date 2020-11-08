@@ -16,7 +16,7 @@ class Turn {
 
     reverse() {
         this.isMyTurn = !this.isMyTurn;
-        this.updateTurnText();
+        setTimeout(this.updateTurnText.bind(this), 2000);
     }
 
     getTurnText() {
@@ -38,9 +38,7 @@ class Turn {
     }
 
     printAttackedText(cellNum) {
-        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
-        const splitted = cellNum.split('');
-        const point = letters[splitted[1] - 1].toUpperCase() + splitted[0];
+        const point = this.getLetterPoint(cellNum);
         this.text.setText(`Opponent attacked ${point}`).setColor('#fff');
         const tween = this.scene.tweens.add({
             targets: [this.text],
@@ -84,6 +82,26 @@ class Turn {
                 this.text.setColor('#fff').setScale(1);
             },
         });
+    }
+
+    getLetterPoint(cellNum) {
+        let point;
+        const splitted = cellNum.split('');
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+
+        if (/10/g.exec(cellNum) !== null) {
+            if (cellNum === '1010') {
+                point = 'J10';
+            } else if (/^10/.exec(cellNum) !== null) {
+                point = letters[splitted[2] - 1] + '10';
+            } else {
+                point = 'J' + splitted[0];
+            }
+        } else {
+            point = letters[splitted[1] - 1] + splitted[0];
+        }
+
+        return point;
     }
 }
 

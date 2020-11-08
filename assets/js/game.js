@@ -859,9 +859,7 @@ var Map = /*#__PURE__*/function () {
 
           _this.attackedCells.push(cellNum);
 
-          setTimeout(function () {
-            game.gameData.turn.reverse();
-          }, 2000);
+          game.gameData.turn.reverse();
         });
       } else {
         // Rect in SetPlaneScene
@@ -1516,7 +1514,7 @@ var Turn = /*#__PURE__*/function () {
     key: "reverse",
     value: function reverse() {
       this.isMyTurn = !this.isMyTurn;
-      this.updateTurnText();
+      setTimeout(this.updateTurnText.bind(this), 2000);
     }
   }, {
     key: "getTurnText",
@@ -1538,9 +1536,7 @@ var Turn = /*#__PURE__*/function () {
   }, {
     key: "printAttackedText",
     value: function printAttackedText(cellNum) {
-      var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
-      var splitted = cellNum.split('');
-      var point = letters[splitted[1] - 1].toUpperCase() + splitted[0];
+      var point = this.getLetterPoint(cellNum);
       this.text.setText("Opponent attacked ".concat(point)).setColor('#fff');
       var tween = this.scene.tweens.add({
         targets: [this.text],
@@ -1590,6 +1586,27 @@ var Turn = /*#__PURE__*/function () {
           _this2.text.setColor('#fff').setScale(1);
         }
       });
+    }
+  }, {
+    key: "getLetterPoint",
+    value: function getLetterPoint(cellNum) {
+      var point;
+      var splitted = cellNum.split('');
+      var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+
+      if (/10/g.exec(cellNum) !== null) {
+        if (cellNum === '1010') {
+          point = 'J10';
+        } else if (/^10/.exec(cellNum) !== null) {
+          point = letters[splitted[2] - 1] + '10';
+        } else {
+          point = 'J' + splitted[0];
+        }
+      } else {
+        point = letters[splitted[1] - 1] + splitted[0];
+      }
+
+      return point;
     }
   }]);
 
