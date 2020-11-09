@@ -443,8 +443,6 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 var GameData = /*#__PURE__*/function () {
   function GameData() {
-    var _this$getParameterByN;
-
     _classCallCheck(this, GameData);
 
     var imageNum = this.getId() == 1 ? 1 : 2; //console.log(imageNum);
@@ -452,7 +450,7 @@ var GameData = /*#__PURE__*/function () {
     this.players = {
       player: {
         id: this.getId(),
-        name: 'User' + ((_this$getParameterByN = this.getParameterByName('userId')) !== null && _this$getParameterByN !== void 0 ? _this$getParameterByN : '1'),
+        name: this.getId() == 1 ? 'Adeline' : 'Rudy',
         photo: "assets/images/profile-".concat(imageNum, ".jpg")
       }
     };
@@ -471,9 +469,9 @@ var GameData = /*#__PURE__*/function () {
   }, {
     key: "getId",
     value: function getId() {
-      var _this$getParameterByN2;
+      var _this$getParameterByN;
 
-      return (_this$getParameterByN2 = this.getParameterByName('userId')) !== null && _this$getParameterByN2 !== void 0 ? _this$getParameterByN2 : 1;
+      return (_this$getParameterByN = this.getParameterByName('userId')) !== null && _this$getParameterByN !== void 0 ? _this$getParameterByN : 1;
     }
   }, {
     key: "getParameterByName",
@@ -606,13 +604,20 @@ var Socket = /*#__PURE__*/function () {
           var headHitted = cellNum == currPlane.headCell;
           var texture = headHitted ? 'fire-cap' : 'fire';
 
-          _this2.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom); // Delete cell from plane cells
+          var fire = _this2.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom);
+
+          if (!_this2.scene.fireGameObjects[planeKey]) {
+            _this2.scene.fireGameObjects[planeKey] = [];
+          }
+
+          _this2.scene.fireGameObjects[planeKey].push(fire); // Delete cell from plane cells
 
 
           currPlane.planeCells.splice(currPlane.planeCells.indexOf(cellNum), 1); // console.log(currPlane.planeCells.length);
 
-          if (currPlane.planeCells.length === 0) {
-            console.log('full discovered plane');
+          if (headHitted || currPlane.planeCells.length === 0) {
+            //console.log('full discovered plane');
+            _this2.scene.destroyPlane(planeKey);
           }
 
           isHit = true;
@@ -708,6 +713,105 @@ var Background = /*#__PURE__*/function () {
 
 /***/ }),
 
+/***/ "./src/js/components/Explode.js":
+/*!**************************************!*\
+  !*** ./src/js/components/Explode.js ***!
+  \**************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Explode = /*#__PURE__*/function () {
+  function Explode(scene) {
+    _classCallCheck(this, Explode);
+
+    this.scene = scene;
+    this.create();
+  }
+
+  _createClass(Explode, [{
+    key: "create",
+    value: function create() {
+      var _this = this;
+
+      this.rt = this.scene.make.renderTexture({
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      }).setOrigin(0, 0);
+      this.blast = this.scene.add.follower(null, 50, 150, 'smoke');
+      this.blast.setAlpha(0).setScale(game.zoom / 2).setDepth(6);
+      this.nuke = this.scene.tweens.add({
+        targets: [this.blast],
+        scaleX: 6 * (game.zoom / 2),
+        scaleY: 6 * (game.zoom / 2),
+        alpha: 0,
+        duration: 1000,
+        ease: 'Bounce.easeIn',
+        onStart: function onStart() {
+          _this.blast.alpha = 1;
+        },
+        onComplete: function onComplete() {
+          _this.rt.clear();
+
+          _this.blast.alpha = 0;
+        },
+        paused: true
+      });
+      this.nuke.setCallback('onUpdate', this.draw.bind(this), [], this); // this.scene.input.on('pointerdown', (pointer) => {
+      //     this.generate(pointer.x, pointer.y);
+      // });
+    }
+  }, {
+    key: "generate",
+    value: function generate(x, y) {
+      this.blast.x = x;
+      this.blast.y = y;
+      this.blast.setScale(0.5);
+      this.blast.alpha = 1;
+      this.nuke.play();
+      var points = [100 / 3, 300 / 3, 400 / 3, 300 / 3, 425 / 3, 275 / 3, 100 / 3, 300 / 3, 200 / 3, 300 / 3, 200 / 3, 150 / 3];
+      var curve = new Phaser.Curves.Spline(points);
+      this.blast.setPath(curve);
+      this.blast.startFollow(200);
+    }
+  }, {
+    key: "draw",
+    value: function draw() {
+      // this.rt.save();
+      var crot = Math.cos(this.blast.rotation + Math.random() * 2);
+      var srot = Math.sin(this.blast.rotation + Math.random() * 2);
+      var rand = Math.random() * 2;
+      var sx = this.blast.scaleX + rand;
+      var sy = this.blast.scaleY + rand;
+
+      if (Math.random() < 0.8) {
+        this.blast.setTexture('explode');
+      } else {
+        this.blast.setTexture('smoke');
+      }
+
+      this.rt.currentMatrix = [crot * sx, srot, -srot, crot * sy, this.blast.x, this.blast.y];
+      this.rt.setAlpha(this.blast.alpha);
+      this.rt.draw(this.blast.texture, this.blast.frame, -this.blast.width / 2, -this.blast.height / 2); // this.rt.restore();
+    }
+  }]);
+
+  return Explode;
+}();
+
+/* harmony default export */ __webpack_exports__["default"] = (Explode);
+
+/***/ }),
+
 /***/ "./src/js/components/Map.js":
 /*!**********************************!*\
   !*** ./src/js/components/Map.js ***!
@@ -717,7 +821,19 @@ var Background = /*#__PURE__*/function () {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function($) {function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+/* WEBPACK VAR INJECTION */(function($) {function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
@@ -844,9 +960,17 @@ var Map = /*#__PURE__*/function () {
               });
 
               gph.fillRectShape(rect);
-              var texture = cellNum == currPlane.head ? 'fire-cap' : 'fire';
+              var headHitted = cellNum == currPlane.head;
+              var texture = headHitted ? 'fire-cap' : 'fire';
 
-              _this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom);
+              _this.scene.add.image(rect.centerX, rect.centerY, texture).setScale(0.6 * game.zoom); // Mark all cells as hitted if head hitted
+
+
+              if (headHitted) {
+                _this.attackedCells = [].concat(_toConsumableArray(_this.attackedCells), _toConsumableArray(currPlane.cells));
+
+                _this.revealHittedPlane(currPlane);
+              }
 
               isHit = true;
             }
@@ -882,6 +1006,29 @@ var Map = /*#__PURE__*/function () {
         // strokeThickness: 1,
         fontSize: "".concat(fontSize, "px")
       }).setOrigin(0.5); // .setDepth(4);
+    }
+  }, {
+    key: "revealHittedPlane",
+    value: function revealHittedPlane(planeData) {
+      var _this2 = this;
+
+      planeData.cells.forEach(function (cell, i) {
+        if (cell != planeData.head) {
+          setTimeout(function () {
+            var rect = _this2.scene.cells["p".concat(cell)].rect;
+
+            var gph = _this2.scene.add.graphics({
+              fillStyle: {
+                color: 0x800000
+              }
+            });
+
+            gph.fillRectShape(rect);
+
+            _this2.scene.add.image(rect.centerX, rect.centerY, 'fire').setScale(0.6 * game.zoom);
+          }, i * 80);
+        }
+      });
     }
   }]);
 
@@ -1798,19 +1945,21 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
       /**
        * LoadScene images
        */
-      // this.load.multiatlas(
-      //     'atlas',
-      //     'assets/sprites/tp/atlas.json',
-      //     'assets/sprites/tp'
-      // );
-      this.load.image('player', game.gameData.players.player.photo);
+      // Player photo
+      this.load.image('player', game.gameData.players.player.photo); // Buttons or other game elements
+
       this.load.image('play-btn', 'assets/images/play-btn.png');
-      this.load.image('btn-start-game', 'assets/images/btn-start-game.png');
+      this.load.image('btn-start-game', 'assets/images/btn-start-game.png'); // Fire & X
+
       this.load.image('x', 'assets/images/x.png');
       this.load.image('fire', 'assets/images/fire.png');
-      this.load.image('fire-cap', 'assets/images/fire-cap.png');
+      this.load.image('fire-cap', 'assets/images/fire-cap.png'); // Planes
+
       this.load.image('plane-1', 'assets/images/planes/plane-1.png');
-      this.load.image('plane-2', 'assets/images/planes/plane-2.png'); // // Testing load scene
+      this.load.image('plane-2', 'assets/images/planes/plane-2.png'); //Explosion images
+
+      this.load.image('smoke', 'assets/images/particles/smoke-puff.png');
+      this.load.image('explode', 'assets/images/particles/muzzleflash3.png'); // // Testing load scene
       // for (let i = 0; i < 500; i++) {
       //     this.load.image('plane-' + i, 'assets/images/planes/plane-2.png');
       // }
@@ -1896,9 +2045,10 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _components_Map__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Map */ "./src/js/components/Map.js");
+/* WEBPACK VAR INJECTION */(function($) {/* harmony import */ var _components_Map__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Map */ "./src/js/components/Map.js");
 /* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
-/* harmony import */ var _components_Background__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/Background */ "./src/js/components/Background.js");
+/* harmony import */ var _components_Explode__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/Explode */ "./src/js/components/Explode.js");
+/* harmony import */ var _components_Background__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/Background */ "./src/js/components/Background.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1921,7 +2071,7 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-// import Socket from '../Socket';
+
 
 
 
@@ -1940,7 +2090,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
       key: 'MainScene'
     });
     _this.cells = {};
-    _this.opponentData = {}; // it is set on Socket class when msg is received from opponent
+    _this.opponentData = {}; // it's set on Socket class
 
     return _this;
   }
@@ -1948,10 +2098,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
   _createClass(MainScene, [{
     key: "init",
     value: function init(data) {
-      //this.myPlanesCells = data.planesData.cells;
       this.myPlanes = data.planesData.planes;
-      console.log(this.myPlanes); // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
-
       this.cameras.main.setBackgroundColor('#fff');
     } //debug
     // drawByCells(cells) {
@@ -1971,7 +2118,10 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
       var _this2 = this;
 
       // console.log('main create');
-      var background = new _components_Background__WEBPACK_IMPORTED_MODULE_2__["default"](this);
+      this.fireGameObjects = {};
+      this.planesGameObjects = {};
+      this.explode = new _components_Explode__WEBPACK_IMPORTED_MODULE_2__["default"](this);
+      var background = new _components_Background__WEBPACK_IMPORTED_MODULE_3__["default"](this);
       var playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_1__["default"](this);
       var playerMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 - 32, 98, null, true);
       var opponentMap = new _components_Map__WEBPACK_IMPORTED_MODULE_0__["default"](this, 96 + 32 * 11, 98, 'opponent', true); // Extract neccesarry data to send as opponent data
@@ -1986,13 +2136,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
           cells: currPlane.instance.planeCells,
           head: currPlane.instance.headCell
         };
-      }); // this.socket.send({
-      //     action: 'setOpponentData',
-      //     opponentData: {
-      //         planesCells: this.myPlanesCells,
-      //     },
-      // });
-      // Send data to opponent
+      }); // Send data to opponent
 
       this.socket.send({
         action: 'setOpponentData',
@@ -2012,11 +2156,13 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 
       // console.log(this.myPlanes);
       Object.keys(this.myPlanes).forEach(function (planeKey) {
-        var playerMapLeftDiff = game.opts.cellSize; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
+        var playerMapLeftDiff = game.opts.cellSize; // Difference between left margin of maps on SetPlaneScene vs MainScene
 
         var plane = _this3.myPlanes[planeKey].instance;
 
         var planeImage = _this3.add.image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key).setAngle(plane.angle).setAlpha(0.9).setScale(game.zoom);
+
+        _this3.planesGameObjects[planeKey] = planeImage;
       });
     }
   }, {
@@ -2038,10 +2184,32 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.add.text(x, y, text, {
         color: '#424242',
         fontFamily: 'Righteous',
-        // stroke: '#000',
-        // strokeThickness: 1,
         fontSize: "".concat(fontSize, "px")
       }).setOrigin(0.5).setAlpha(0.7);
+    }
+    /**
+     * Destroy if plane head or all plane cells hitted
+     * Called on Socket class
+     */
+
+  }, {
+    key: "destroyPlane",
+    value: function destroyPlane(planeKey) {
+      var plane = this.planesGameObjects[planeKey];
+      var fires = this.fireGameObjects[planeKey]; // Explode plane
+
+      this.explode.generate(plane.x, plane.y);
+      plane.setAlpha(0.3); // Delete from remaining planes, so can detect game over
+
+      delete this.planesGameObjects[planeKey]; // Remove fire game objects
+
+      fires.forEach(function (fire) {
+        return fire.destroy();
+      }); // Check game over
+
+      if ($.isEmptyObject(this.planesGameObjects)) {
+        console.log('Game OVERRRRRRRR');
+      }
     }
   }]);
 
@@ -2049,6 +2217,7 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 }(Phaser.Scene);
 
 /* harmony default export */ __webpack_exports__["default"] = (MainScene);
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js")))
 
 /***/ }),
 
@@ -2061,11 +2230,10 @@ var MainScene = /*#__PURE__*/function (_Phaser$Scene) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _components_Background__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/Background */ "./src/js/components/Background.js");
+/* harmony import */ var _Socket__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../Socket */ "./src/js/Socket.js");
 /* harmony import */ var _components_Map__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Map */ "./src/js/components/Map.js");
-/* harmony import */ var _components_Players__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/Players */ "./src/js/components/Players.js");
-/* harmony import */ var _components_Plane__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/Plane */ "./src/js/components/Plane.js");
-/* harmony import */ var _Socket__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../Socket */ "./src/js/Socket.js");
+/* harmony import */ var _components_Plane__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/Plane */ "./src/js/components/Plane.js");
+/* harmony import */ var _components_Background__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/Background */ "./src/js/components/Background.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -2087,7 +2255,6 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
 
 
 
@@ -2126,7 +2293,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.planes = {};
       this.planesGameObjects = []; // this.drawSceneBackground();
 
-      var background = new _components_Background__WEBPACK_IMPORTED_MODULE_0__["default"](this); // // Setup players
+      var background = new _components_Background__WEBPACK_IMPORTED_MODULE_3__["default"](this); // // Setup players
       //this.players = new Players(this);
       // const x = 120;
       // const y = 80;
@@ -2134,14 +2301,14 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
 
       var map = new _components_Map__WEBPACK_IMPORTED_MODULE_1__["default"](this, 96, 98); //this.plane = new Plane(this);
 
-      var plane1 = new _components_Plane__WEBPACK_IMPORTED_MODULE_3__["default"]({
+      var plane1 = new _components_Plane__WEBPACK_IMPORTED_MODULE_2__["default"]({
         scene: this,
         x: game.config.width / game.zoom / 2 + 200,
         y: 140,
         planeNum: 1
       });
       this.planesGameObjects.push(plane1);
-      var plane2 = new _components_Plane__WEBPACK_IMPORTED_MODULE_3__["default"]({
+      var plane2 = new _components_Plane__WEBPACK_IMPORTED_MODULE_2__["default"]({
         scene: this,
         x: game.config.width / game.zoom / 2 + 300,
         y: 140,
@@ -2153,7 +2320,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       var mainScene = game.scene.getScene('MainScene'); // mainScene.players = new Players(mainScene);
       // ---
 
-      this.socket = new _Socket__WEBPACK_IMPORTED_MODULE_4__["default"]();
+      this.socket = new _Socket__WEBPACK_IMPORTED_MODULE_0__["default"]();
       mainScene.socket = this.socket; // ---
       // Set opponent screen
       // this.scene.stop();

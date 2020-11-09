@@ -1,8 +1,7 @@
-import Background from '../components/Background';
-import Map from '../components/Map';
-import Players from '../components/Players';
-import Plane from '../components/Plane';
 import Socket from '../Socket';
+import Map from '../components/Map';
+import Plane from '../components/Plane';
+import Background from '../components/Background';
 
 class SetPlaneScene extends Phaser.Scene {
     constructor() {

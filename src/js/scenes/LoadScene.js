@@ -17,24 +17,25 @@ class LoadScene extends Phaser.Scene {
         /**
          * LoadScene images
          */
-
-        // this.load.multiatlas(
-        //     'atlas',
-        //     'assets/sprites/tp/atlas.json',
-        //     'assets/sprites/tp'
-        // );
-
+        // Player photo
         this.load.image('player', game.gameData.players.player.photo);
 
+        // Buttons or other game elements
         this.load.image('play-btn', 'assets/images/play-btn.png');
         this.load.image('btn-start-game', 'assets/images/btn-start-game.png');
 
+        // Fire & X
         this.load.image('x', 'assets/images/x.png');
         this.load.image('fire', 'assets/images/fire.png');
         this.load.image('fire-cap', 'assets/images/fire-cap.png');
 
+        // Planes
         this.load.image('plane-1', 'assets/images/planes/plane-1.png');
         this.load.image('plane-2', 'assets/images/planes/plane-2.png');
+
+        //Explosion images
+        this.load.image('smoke', 'assets/images/particles/smoke-puff.png');
+        this.load.image('explode', 'assets/images/particles/muzzleflash3.png');
 
         // // Testing load scene
         // for (let i = 0; i < 500; i++) {

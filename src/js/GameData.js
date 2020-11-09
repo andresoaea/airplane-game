@@ -8,7 +8,7 @@ class GameData {
         this.players = {
             player: {
                 id: this.getId(),
-                name: 'User' + (this.getParameterByName('userId') ?? '1'),
+                name: this.getId() == 1 ? 'Adeline' : 'Rudy',
                 photo: `assets/images/profile-${imageNum}.jpg`,
             },
         };

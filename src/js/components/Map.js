@@ -120,12 +120,21 @@ class Map {
                         });
                         gph.fillRectShape(rect);
 
-                        const texture =
-                            cellNum == currPlane.head ? 'fire-cap' : 'fire';
+                        const headHitted = cellNum == currPlane.head;
+                        const texture = headHitted ? 'fire-cap' : 'fire';
 
                         this.scene.add
                             .image(rect.centerX, rect.centerY, texture)
                             .setScale(0.6 * game.zoom);
+
+                        // Mark all cells as hitted if head hitted
+                        if (headHitted) {
+                            this.attackedCells = [
+                                ...this.attackedCells,
+                                ...currPlane.cells,
+                            ];
+                            this.revealHittedPlane(currPlane);
+                        }
 
                         isHit = true;
                     }
@@ -161,6 +170,23 @@ class Map {
             })
             .setOrigin(0.5);
         // .setDepth(4);
+    }
+
+    revealHittedPlane(planeData) {
+        planeData.cells.forEach((cell, i) => {
+            if (cell != planeData.head) {
+                setTimeout(() => {
+                    const rect = this.scene.cells[`p${cell}`].rect;
+                    const gph = this.scene.add.graphics({
+                        fillStyle: { color: 0x800000 },
+                    });
+                    gph.fillRectShape(rect);
+                    this.scene.add
+                        .image(rect.centerX, rect.centerY, 'fire')
+                        .setScale(0.6 * game.zoom);
+                }, i * 80);
+            }
+        });
     }
 }
 

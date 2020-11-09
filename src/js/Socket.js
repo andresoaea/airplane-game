@@ -81,9 +81,14 @@ class Socket {
                 const headHitted = cellNum == currPlane.headCell;
                 const texture = headHitted ? 'fire-cap' : 'fire';
 
-                this.scene.add
+                const fire = this.scene.add
                     .image(rect.centerX, rect.centerY, texture)
                     .setScale(0.6 * game.zoom);
+
+                if (!this.scene.fireGameObjects[planeKey]) {
+                    this.scene.fireGameObjects[planeKey] = [];
+                }
+                this.scene.fireGameObjects[planeKey].push(fire);
 
                 // Delete cell from plane cells
                 currPlane.planeCells.splice(
@@ -92,8 +97,9 @@ class Socket {
                 );
 
                 // console.log(currPlane.planeCells.length);
-                if (currPlane.planeCells.length === 0) {
-                    console.log('full discovered plane');
+                if (headHitted || currPlane.planeCells.length === 0) {
+                    //console.log('full discovered plane');
+                    this.scene.destroyPlane(planeKey);
                 }
 
                 isHit = true;

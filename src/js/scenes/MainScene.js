@@ -1,6 +1,6 @@
-// import Socket from '../Socket';
 import Map from '../components/Map';
 import Players from '../components/Players';
+import Explode from '../components/Explode';
 import Background from '../components/Background';
 
 class MainScene extends Phaser.Scene {
@@ -10,14 +10,11 @@ class MainScene extends Phaser.Scene {
         });
 
         this.cells = {};
-        this.opponentData = {}; // it is set on Socket class when msg is received from opponent
+        this.opponentData = {}; // it's set on Socket class
     }
 
     init(data) {
-        //this.myPlanesCells = data.planesData.cells;
         this.myPlanes = data.planesData.planes;
-        console.log(this.myPlanes);
-        // console.log('heads', this.myPlanesCells[0], this.myPlanesCells[10]);
         this.cameras.main.setBackgroundColor('#fff');
     }
 
@@ -36,6 +33,10 @@ class MainScene extends Phaser.Scene {
 
     create() {
         // console.log('main create');
+        this.fireGameObjects = {};
+        this.planesGameObjects = {};
+
+        this.explode = new Explode(this);
 
         const background = new Background(this);
         const playersComponent = new Players(this);
@@ -53,13 +54,6 @@ class MainScene extends Phaser.Scene {
                 head: currPlane.instance.headCell,
             };
         });
-
-        // this.socket.send({
-        //     action: 'setOpponentData',
-        //     opponentData: {
-        //         planesCells: this.myPlanesCells,
-        //     },
-        // });
 
         // Send data to opponent
         this.socket.send({
@@ -83,14 +77,17 @@ class MainScene extends Phaser.Scene {
 
     drawPlanes() {
         // console.log(this.myPlanes);
+
         Object.keys(this.myPlanes).forEach((planeKey) => {
-            const playerMapLeftDiff = game.opts.cellSize; // Difference between left margin of maps                                               // on SetPlaneScene and MainScene
+            const playerMapLeftDiff = game.opts.cellSize; // Difference between left margin of maps on SetPlaneScene vs MainScene
             const plane = this.myPlanes[planeKey].instance;
             const planeImage = this.add
                 .image(plane.x - playerMapLeftDiff, plane.y, plane.texture.key)
                 .setAngle(plane.angle)
                 .setAlpha(0.9)
                 .setScale(game.zoom);
+
+            this.planesGameObjects[planeKey] = planeImage;
         });
     }
 
@@ -111,12 +108,34 @@ class MainScene extends Phaser.Scene {
             .text(x, y, text, {
                 color: '#424242',
                 fontFamily: 'Righteous',
-                // stroke: '#000',
-                // strokeThickness: 1,
                 fontSize: `${fontSize}px`,
             })
             .setOrigin(0.5)
             .setAlpha(0.7);
+    }
+
+    /**
+     * Destroy if plane head or all plane cells hitted
+     * Called on Socket class
+     */
+    destroyPlane(planeKey) {
+        const plane = this.planesGameObjects[planeKey];
+        const fires = this.fireGameObjects[planeKey];
+
+        // Explode plane
+        this.explode.generate(plane.x, plane.y);
+        plane.setAlpha(0.3);
+
+        // Delete from remaining planes, so can detect game over
+        delete this.planesGameObjects[planeKey];
+
+        // Remove fire game objects
+        fires.forEach((fire) => fire.destroy());
+
+        // Check game over
+        if ($.isEmptyObject(this.planesGameObjects)) {
+            console.log('Game OVERRRRRRRR');
+        }
     }
 }
 
