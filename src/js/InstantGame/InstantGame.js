@@ -19,9 +19,7 @@ class InstantGame {
             if (canMatch) {
                 FBInstant.matchPlayerAsync(null, true).then(function() {
                     const room = FBInstant.context.getID();
-                    console.log(room);
-
-                    // game.bus.$emit('matchToRoom', room);
+                    game.bus.$emit('matchToRoom', room);
                 });
             } else {
                 // Player cannot match

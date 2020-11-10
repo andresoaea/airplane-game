@@ -735,7 +735,7 @@ var InstantGame = /*#__PURE__*/function () {
         if (canMatch) {
           FBInstant.matchPlayerAsync(null, true).then(function () {
             var room = FBInstant.context.getID();
-            console.log(room); // game.bus.$emit('matchToRoom', room);
+            game.bus.$emit('matchToRoom', room);
           });
         } else {
           // Player cannot match
