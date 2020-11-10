@@ -18,7 +18,12 @@ class LoadScene extends Phaser.Scene {
          * LoadScene images
          */
         // Player photo
-        this.load.image('player', game.gameData.players.player.photo);
+        if (game.gameData.players.player.photo) {
+            this.load.image('player', game.gameData.players.player.photo);
+        } else {
+            this.load.image('def-pilot', 'assets/images/def-pilot.png');
+            this.load.image('def-pilot-1', 'assets/images/def-pilot-1.png');
+        }
 
         // Buttons or other game elements
         this.load.image('play-btn', 'assets/images/play-btn.png');

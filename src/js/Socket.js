@@ -1,8 +1,10 @@
 class Socket {
     constructor() {
+        const domain = 'localhost'; //192.168.0.105
+
         this.scene = game.scene.getScene('MainScene');
         const queryString = $.param(game.gameData.players.player);
-        const url = `ws://192.168.0.105:8080/comm?${queryString}`;
+        const url = `wss://${domain}/wss2/comm?${queryString}`;
         const conn = new WebSocket(url);
 
         conn.onopen = (e) => {

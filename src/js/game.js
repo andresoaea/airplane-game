@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Phaser from 'phaser';
 import Swal from 'sweetalert2';
 import Helpers from './helpers';
+import InstantGame from './InstantGame/InstantGame';
 
 window.Swal = Swal;
 window.jQuery = window.$ = require('jquery');
@@ -29,24 +30,32 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-
+game.bus = new Vue();
+window.game = game;
 game.zoom = zoom;
 game.opts = {
     cellSize: 32 * zoom,
     defaultWidth: 800,
     defaultHeight: 458,
 };
-game.bus = new Vue();
 
 game.scene.add('LoadScene', new LoadScene());
 game.scene.add('MainScene', new MainScene());
 game.scene.add('StartScene', new StartScene());
 game.scene.add('SetPlaneScene', new SetPlaneScene());
 //game.scene.add('SetOpponentScene', new SetOpponentScene());
-game.scene.start('LoadScene');
+game.isInstant = InstantGame.isInstantGame();
 
-window.game = game;
+if (game.isInstant) {
+    game.InstantGame = InstantGame;
+    InstantGame.init().then(() => start());
+} else {
+    start();
+}
 
-new Vue({
-    render: (h) => h(SetOpponent),
-}).$mount('#game div');
+function start() {
+    game.scene.start('LoadScene');
+    new Vue({
+        render: (h) => h(SetOpponent),
+    }).$mount('#game div');
+}

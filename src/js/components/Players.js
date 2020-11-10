@@ -22,6 +22,12 @@ class Players {
     }
 
     loadOpponent() {
+        if (!this.opponent.photo) {
+            // Print default image if opponent has no photo
+            this.printOpponent();
+            return;
+        }
+
         if (this.scene.textures.exists(`opponent-${this.opponent.id}`)) {
             this.printOpponent();
             return;
@@ -36,21 +42,22 @@ class Players {
     }
 
     printPlayer() {
-        this.printPlayerPhoto('player', 30, 10);
-        this.printPlayerName(this.player.name, 90, 50, 0);
+        const photoKey = this.player.photo ? 'player' : 'def-pilot';
+        const name = this.player.name ?? 'You';
+
+        this.printPlayerPhoto(photoKey, 30, 10);
+        this.printPlayerName(name, 90, 50, 0);
     }
 
     printOpponent() {
-        this.printPlayerPhoto(
-            `opponent-${this.opponent.id}`,
-            game.opts.defaultWidth - 80,
-            10
-        );
-        this.printPlayerName(
-            this.opponent.name,
-            game.opts.defaultWidth - 90,
-            50
-        );
+        const photoKey = this.opponent.photo
+            ? `opponent-${this.opponent.id}`
+            : 'def-pilot-1';
+        const name =
+            this.opponent.name.length !== 0 ? this.opponent.name : 'Opponent';
+
+        this.printPlayerPhoto(photoKey, game.opts.defaultWidth - 80, 10);
+        this.printPlayerName(name, game.opts.defaultWidth - 90, 50);
     }
 
     printPlayerPhoto(key, x, y) {

@@ -1,7 +1,7 @@
-ul[data-v-580e046a]:not(.room-generated) {
+ul[data-v-69959169]:not(.room-generated) {
   display: inherit;
 }
-ul li span[data-v-580e046a] {
+ul li span[data-v-69959169] {
   width: 36px;
   height: 36px;
   display: flex;
@@ -10,12 +10,19 @@ ul li span[data-v-580e046a] {
   color: #eee;
   border-radius: 2px;
 }
-ul li i[data-v-580e046a] {
+ul li i[data-v-69959169] {
   text-align: center;
   font-size: 23px;
   margin: 3px 0;
   cursor: pointer;
   color: #2d3748;
+}
+.go-back-arrow[data-v-69959169] {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}.play-type > div[data-v-4651e1f8] {
+  cursor: pointer;
 }@charset "UTF-8";
 
 /*!

@@ -1,3 +1,5 @@
-### The Airplanes with friends
+### Airplanes with Friends
 
-#### Enjoy a childhood game
+#### A childhood game on paper now online
+
+###### HTML5 game based on Phaser3 js framework + some VueJS components
