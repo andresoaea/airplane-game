@@ -10,6 +10,7 @@
           <p>Play with a friend</p>
         </div>
         <div @click="playByRoomCode()" class="flex-1">
+          <img :src="this.getLoadedImageSrc('btn-start-game')" />
           <p>Play by room code</p>
         </div>
       </div>
@@ -31,6 +32,11 @@ export default {
     },
     playWithRandomOpponent() {
       game.InstantGame.match();
+    },
+    getLoadedImageSrc(imageKey) {
+      const textures = game.scene.getScene("LoadScene").textures;
+      const blobUrl = textures.list[imageKey].source[0].image.src;
+      return blobUrl;
     }
   }
 };

@@ -31,8 +31,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   data: function data() {
     return {
-      component: "fbMatch",
-      // "roomCode",
+      component: game.isInstant ? "fbMatch" : "roomCode",
       show: false
     };
   },
@@ -81,6 +80,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "set-opponent-by-fb-match",
   created: function created() {
@@ -94,6 +94,11 @@ __webpack_require__.r(__webpack_exports__);
     },
     playWithRandomOpponent: function playWithRandomOpponent() {
       game.InstantGame.match();
+    },
+    getLoadedImageSrc: function getLoadedImageSrc(imageKey) {
+      var textures = game.scene.getScene("LoadScene").textures;
+      var blobUrl = textures.list[imageKey].source[0].image.src;
+      return blobUrl;
     }
   }
 });
@@ -109,6 +114,10 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+//
+//
+//
+//
 //
 //
 //
@@ -386,7 +395,13 @@ var render = function() {
                 }
               }
             },
-            [_c("p", [_vm._v("Play by room code")])]
+            [
+              _c("img", {
+                attrs: { src: this.getLoadedImageSrc("btn-start-game") }
+              }),
+              _vm._v(" "),
+              _c("p", [_vm._v("Play by room code")])
+            ]
           )
         ])
       ])
@@ -575,25 +590,27 @@ var render = function() {
           ])
         : _vm._e(),
       _vm._v(" "),
-      _c(
-        "button",
-        {
-          staticClass: "go-back-arrow text-gray-700",
-          on: {
-            click: function($event) {
-              return _vm.playByFbMatch()
-            }
-          }
-        },
-        [
-          _c("i", {
-            staticClass: "fa fa-arrow-left mr-2",
-            attrs: { "aria-hidden": "true" }
-          }),
-          _vm._v(" "),
-          _c("span", [_vm._v("Go back")])
-        ]
-      )
+      _vm.$root.game.isInstant
+        ? _c(
+            "button",
+            {
+              staticClass: "go-back-arrow text-gray-700",
+              on: {
+                click: function($event) {
+                  return _vm.playByFbMatch()
+                }
+              }
+            },
+            [
+              _c("i", {
+                staticClass: "fa fa-arrow-left mr-2",
+                attrs: { "aria-hidden": "true" }
+              }),
+              _vm._v(" "),
+              _c("span", [_vm._v("Go back")])
+            ]
+          )
+        : _vm._e()
     ]
   )
 }
@@ -628,15 +645,6 @@ var GameData = /*#__PURE__*/function () {
   function GameData() {
     _classCallCheck(this, GameData);
 
-    // let imageNum = this.getId() == 1 ? 1 : 2;
-    // //console.log(imageNum);
-    // this.players = {
-    //     player: {
-    //         id: this.getId(),
-    //         name: this.getId() == 1 ? 'Adeline' : 'Rudy',
-    //         photo: `assets/images/profile-${imageNum}.jpg`,
-    //     },
-    // };
     this.players = {
       player: {
         id: this.generateUniqId(),
@@ -663,23 +671,12 @@ var GameData = /*#__PURE__*/function () {
       this.players.opponent = opponent;
       var setPlaneScene = game.scene.getScene('SetPlaneScene');
       setPlaneScene.playersComponent = new _components_Players__WEBPACK_IMPORTED_MODULE_0__["default"](setPlaneScene);
-    } // helper for debugging
-    // getId() {
-    //     return this.getParameterByName('userId') ?? 1;
-    // }
-    // getParameterByName(name, url = window.location.href) {
-    //     name = name.replace(/[\[\]]/g, '\\$&');
-    //     var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-    //         results = regex.exec(url);
-    //     if (!results) return null;
-    //     if (!results[2]) return '';
-    //     return decodeURIComponent(results[2].replace(/\+/g, ' '));
-    // }
-
+    }
   }, {
     key: "generateUniqId",
     value: function generateUniqId() {
-      return new Date().getTime() + '-' + Math.random().toString(36).substr(2, 9); // returns somethink like "1605022304112-9cq42s27v"
+      // Generate unique id, something like "1605022304112-9cq42s27v"
+      return new Date().getTime() + '-' + Math.random().toString(36).substr(2, 9);
     }
   }]);
 
@@ -687,84 +684,6 @@ var GameData = /*#__PURE__*/function () {
 }();
 
 /* harmony default export */ __webpack_exports__["default"] = (GameData);
-
-/***/ }),
-
-/***/ "./src/js/InstantGame/InstantGame.js":
-/*!*******************************************!*\
-  !*** ./src/js/InstantGame/InstantGame.js ***!
-  \*******************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var InstantGame = /*#__PURE__*/function () {
-  function InstantGame() {
-    _classCallCheck(this, InstantGame);
-  }
-
-  _createClass(InstantGame, null, [{
-    key: "isInstantGame",
-    value: function isInstantGame() {
-      return true;
-    }
-  }, {
-    key: "init",
-    value: function init() {
-      return new Promise(function (resolve) {
-        FBInstant.initializeAsync().then(function () {
-          FBInstant.setLoadingProgress(100);
-          FBInstant.startGameAsync().then(function () {
-            // start game
-            resolve();
-          });
-        });
-      });
-    }
-  }, {
-    key: "match",
-    value: function match() {
-      FBInstant.checkCanPlayerMatchAsync().then(function (canMatch) {
-        if (canMatch) {
-          FBInstant.matchPlayerAsync(null, true).then(function () {
-            var room = FBInstant.context.getID();
-            game.bus.$emit('matchToRoom', room);
-          });
-        } else {
-          // Player cannot match
-          console.log('cannot match');
-        }
-      });
-    }
-  }, {
-    key: "chooseContext",
-    value: function chooseContext() {
-      FBInstant.context.chooseAsync().then(function () {
-        console.log(FBInstant.context.getID()); // 1234567890
-      });
-    }
-  }, {
-    key: "getPlayersInContext",
-    value: function getPlayersInContext(context) {
-      FBInstant.context.getPlayersAsync().then(function (players) {
-        return players.forEach(function (player) {
-          console.log(player.getName());
-        });
-      });
-    }
-  }]);
-
-  return InstantGame;
-}();
-
-/* harmony default export */ __webpack_exports__["default"] = (InstantGame);
 
 /***/ }),
 
@@ -2068,7 +1987,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
 /* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _helpers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./helpers */ "./src/js/helpers.js");
-/* harmony import */ var _InstantGame_InstantGame__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./InstantGame/InstantGame */ "./src/js/InstantGame/InstantGame.js");
+/* harmony import */ var _platforms_InstantGame__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./platforms/InstantGame */ "./src/js/platforms/InstantGame.js");
 /* harmony import */ var _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./scenes/LoadScene */ "./src/js/scenes/LoadScene.js");
 /* harmony import */ var _scenes_MainScene__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./scenes/MainScene */ "./src/js/scenes/MainScene.js");
 /* harmony import */ var _scenes_StartScene__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./scenes/StartScene */ "./src/js/scenes/StartScene.js");
@@ -2079,15 +1998,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+
+
 window.Swal = sweetalert2__WEBPACK_IMPORTED_MODULE_2___default.a;
-__webpack_provided_window_dot_jQuery = window.$ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js"); // window.axios = require('axios');
-// window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+__webpack_provided_window_dot_jQuery = window.$ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js"); // Override default revokeObjectURL method, so we can
+// reuse loaded images outside Phaser
 
-
-
-
- //import SetOpponentScene from './scenes/SetOpponentScene';
-
+phaser__WEBPACK_IMPORTED_MODULE_1___default.a.Loader.File.revokeObjectURL = function () {};
 
 var zoom = _helpers__WEBPACK_IMPORTED_MODULE_3__["default"].getDevicePixelRatio();
 var config = {
@@ -2095,7 +2015,7 @@ var config = {
   width: 800 * zoom,
   height: 458 * zoom,
   parent: 'game',
-  title: 'The Airplanes with Friends',
+  title: 'Airplanes with Friends',
   version: '0.1.0',
   url: ''
 };
@@ -2111,13 +2031,12 @@ game.opts = {
 game.scene.add('LoadScene', new _scenes_LoadScene__WEBPACK_IMPORTED_MODULE_5__["default"]());
 game.scene.add('MainScene', new _scenes_MainScene__WEBPACK_IMPORTED_MODULE_6__["default"]());
 game.scene.add('StartScene', new _scenes_StartScene__WEBPACK_IMPORTED_MODULE_7__["default"]());
-game.scene.add('SetPlaneScene', new _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_8__["default"]()); //game.scene.add('SetOpponentScene', new SetOpponentScene());
-
-game.isInstant = _InstantGame_InstantGame__WEBPACK_IMPORTED_MODULE_4__["default"].isInstantGame();
+game.scene.add('SetPlaneScene', new _scenes_SetPlaneScene__WEBPACK_IMPORTED_MODULE_8__["default"]());
+game.isInstant = _platforms_InstantGame__WEBPACK_IMPORTED_MODULE_4__["default"].isInstantGame();
 
 if (game.isInstant) {
-  game.InstantGame = _InstantGame_InstantGame__WEBPACK_IMPORTED_MODULE_4__["default"];
-  _InstantGame_InstantGame__WEBPACK_IMPORTED_MODULE_4__["default"].init().then(function () {
+  game.InstantGame = _platforms_InstantGame__WEBPACK_IMPORTED_MODULE_4__["default"];
+  _platforms_InstantGame__WEBPACK_IMPORTED_MODULE_4__["default"].init().then(function () {
     return start();
   });
 } else {
@@ -2126,6 +2045,7 @@ if (game.isInstant) {
 
 function start() {
   game.scene.start('LoadScene');
+  vue__WEBPACK_IMPORTED_MODULE_0___default.a.prototype.game = game;
   new vue__WEBPACK_IMPORTED_MODULE_0___default.a({
     render: function render(h) {
       return h(_vue_components_SetOpponent_vue__WEBPACK_IMPORTED_MODULE_9__["default"]);
@@ -2184,6 +2104,84 @@ __webpack_require__.r(__webpack_exports__);
     }
   }
 });
+
+/***/ }),
+
+/***/ "./src/js/platforms/InstantGame.js":
+/*!*****************************************!*\
+  !*** ./src/js/platforms/InstantGame.js ***!
+  \*****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var InstantGame = /*#__PURE__*/function () {
+  function InstantGame() {
+    _classCallCheck(this, InstantGame);
+  }
+
+  _createClass(InstantGame, null, [{
+    key: "isInstantGame",
+    value: function isInstantGame() {
+      return true;
+    }
+  }, {
+    key: "init",
+    value: function init() {
+      return new Promise(function (resolve) {
+        FBInstant.initializeAsync().then(function () {
+          FBInstant.setLoadingProgress(100);
+          FBInstant.startGameAsync().then(function () {
+            // start game
+            resolve();
+          });
+        });
+      });
+    }
+  }, {
+    key: "match",
+    value: function match() {
+      FBInstant.checkCanPlayerMatchAsync().then(function (canMatch) {
+        if (canMatch) {
+          FBInstant.matchPlayerAsync(null, true).then(function () {
+            var room = FBInstant.context.getID();
+            game.bus.$emit('matchToRoom', room);
+          });
+        } else {
+          // Player cannot match
+          console.log('cannot match');
+        }
+      });
+    }
+  }, {
+    key: "chooseContext",
+    value: function chooseContext() {
+      FBInstant.context.chooseAsync().then(function () {
+        console.log(FBInstant.context.getID()); // 1234567890
+      });
+    }
+  }, {
+    key: "getPlayersInContext",
+    value: function getPlayersInContext(context) {
+      FBInstant.context.getPlayersAsync().then(function (players) {
+        return players.forEach(function (player) {
+          console.log(player.getName());
+        });
+      });
+    }
+  }]);
+
+  return InstantGame;
+}();
+
+/* harmony default export */ __webpack_exports__["default"] = (InstantGame);
 
 /***/ }),
 
@@ -2579,15 +2577,8 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
     _classCallCheck(this, SetPlaneScene);
 
     return _super.call(this, {
-      key: 'SetPlaneScene',
-      physics: {
-        arcade: {//debug: true,
-        }
-      }
-    }); //this.cellSize = 40;
-    // this.cells = [];
-    // this.planes = {};
-    // this.planesGameObjects = [];
+      key: 'SetPlaneScene'
+    });
   }
 
   _createClass(SetPlaneScene, [{
@@ -2600,16 +2591,9 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
     value: function create() {
       this.cells = [];
       this.planes = {};
-      this.planesGameObjects = []; // this.drawSceneBackground();
-
-      var background = new _components_Background__WEBPACK_IMPORTED_MODULE_3__["default"](this); // // Setup players
-      //this.players = new Players(this);
-      // const x = 120;
-      // const y = 80;
-      // this.drawPlayerMap(x, y);
-
-      var map = new _components_Map__WEBPACK_IMPORTED_MODULE_1__["default"](this, 96, 98); //this.plane = new Plane(this);
-
+      this.planesGameObjects = [];
+      var background = new _components_Background__WEBPACK_IMPORTED_MODULE_3__["default"](this);
+      var map = new _components_Map__WEBPACK_IMPORTED_MODULE_1__["default"](this, 96, 98);
       var plane1 = new _components_Plane__WEBPACK_IMPORTED_MODULE_2__["default"]({
         scene: this,
         x: game.config.width / game.zoom / 2 + 200,
@@ -2639,20 +2623,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.scene.launch('StartScene', {
         setPlaneScene: this
       }).bringToTop('StartScene'); // ---
-      //
-      //
-      ///
-      // this.scene.launch('SetOpponentScene', {
-      //     setPlaneScene: this,
-      // });
-      // setTimeout(() => {
-      //     this.scene.stop('SetOpponentScene');
-      //     this.scene.resume();
-      // }, 4000);
-      //debug
-
-      window.socket = this.socket;
-      window.SetPlaneScene = this; // let cls = localStorage.getItem('lastPlaceCells').split(',');
+      // let cls = localStorage.getItem('lastPlaceCells').split(',');
       // this.drawByCells(cls);
     }
   }, {
@@ -2663,8 +2634,6 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       this.add.image(630 * game.zoom, 384 * game.zoom, 'btn-start-game').setScale(game.zoom).setInteractive({
         useHandCursor: true
       }).on('pointerup', function () {
-        //// let heads = [];
-        //let allPlanesCells = [];
         var keys = Object.keys(_this.planes);
         var keysLength = keys.length;
 
@@ -2672,15 +2641,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
           // add 2 planes
           console.log('Add 2 planes to map');
           return;
-        } // for (let i = 0; i < keysLength; i++) {
-        //     //heads.push(this.planes[keys[i]].cells[0]);
-        //     allPlanesCells = [
-        //         ...allPlanesCells,
-        //         ...this.planes[keys[i]].cells,
-        //     ];
-        // }
-        //console.log(this.planes);
-
+        }
 
         _this.scene.stop();
 
@@ -2709,72 +2670,7 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
 
         graphics.strokeRectShape(_this2.cells[cl].rect);
       });
-    } // drawPlayerMap(x, y) {
-    //     const squareWidth = this.cellSize;
-    //     const cellsNum = 8;
-    //     for (let i = 0; i < cellsNum; i++) {
-    //         // Go vertical
-    //         for (let j = 0; j < cellsNum; j++) {
-    //             // Go horizontal
-    //             this.drawRect(
-    //                 x + j * squareWidth,
-    //                 y + i * squareWidth,
-    //                 squareWidth,
-    //                 i,
-    //                 j
-    //             );
-    //         }
-    //     }
-    //     this.drawBorder(x, y, squareWidth, cellsNum);
-    // }
-    // drawBorder(x, y, squareWidth, cellsNum) {
-    //     let width = squareWidth * cellsNum;
-    //     let rect = new Phaser.Geom.Rectangle(x, y, width, width);
-    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-    //     let graphics = this.add.graphics({
-    //         lineStyle: { width: 3, color: 0x000000 },
-    //     });
-    //     graphics.strokeRectShape(rect);
-    //     this.dropZoneRect = rect;
-    // }
-    // drawRect(x, y, squareWidth, i, j, type) {
-    //     let rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth);
-    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-    //     let graphics = this.add.graphics({
-    //         lineStyle: { width: 1, color: 0x000000 },
-    //     });
-    //     graphics.strokeRectShape(rect);
-    //     const id = `${j + 1}${i + 1}`;
-    //     this.cells[id] = { id, rect };
-    // }
-    // drawSceneBackground() {
-    //     const x = 0;
-    //     const y = 0;
-    //     const squareWidth = this.cellSize;
-    //     const cellsNum = 20;
-    //     for (let i = 0; i < cellsNum; i++) {
-    //         // Go vertical
-    //         for (let j = 0; j < cellsNum; j++) {
-    //             // Go horizontal
-    //             this.drawBgRect(
-    //                 x + j * squareWidth,
-    //                 y + i * squareWidth,
-    //                 squareWidth,
-    //                 i,
-    //                 j
-    //             );
-    //         }
-    //     }
-    // }
-    // drawBgRect(x, y, squareWidth, i, j) {
-    //     let rect = new Phaser.Geom.Rectangle(x, y, squareWidth, squareWidth);
-    //     //   let graphics = this.add.graphics({ fillStyle: { color: 0x0000ff } });
-    //     var graphics = this.add.graphics({
-    //         lineStyle: { width: 1, color: 0xeeeeee },
-    //     });
-    //     graphics.strokeRectShape(rect);
-    // }
-
+    }
   }]);
 
   return SetPlaneScene;

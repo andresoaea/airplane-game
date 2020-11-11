@@ -2,10 +2,7 @@ import Vue from 'vue';
 import Phaser from 'phaser';
 import Swal from 'sweetalert2';
 import Helpers from './helpers';
-import InstantGame from './InstantGame/InstantGame';
-
-window.Swal = Swal;
-window.jQuery = window.$ = require('jquery');
+import InstantGame from './platforms/InstantGame';
 
 import LoadScene from './scenes/LoadScene';
 import MainScene from './scenes/MainScene';
@@ -13,6 +10,13 @@ import StartScene from './scenes/StartScene';
 import SetPlaneScene from './scenes/SetPlaneScene';
 
 import SetOpponent from './vue-components/SetOpponent.vue';
+
+window.Swal = Swal;
+window.jQuery = window.$ = require('jquery');
+
+// Override default revokeObjectURL method, so we can
+// reuse loaded images outside Phaser
+Phaser.Loader.File.revokeObjectURL = () => {};
 
 const zoom = Helpers.getDevicePixelRatio();
 
@@ -52,6 +56,7 @@ if (game.isInstant) {
 
 function start() {
     game.scene.start('LoadScene');
+    Vue.prototype.game = game;
     new Vue({
         render: (h) => h(SetOpponent),
     }).$mount('#game div');

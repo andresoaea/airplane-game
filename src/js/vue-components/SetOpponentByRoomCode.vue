@@ -38,7 +38,11 @@
       >Go back</button>
     </div>
 
-    <button @click="playByFbMatch()" class="go-back-arrow text-gray-700">
+    <button
+      v-if="$root.game.isInstant"
+      @click="playByFbMatch()"
+      class="go-back-arrow text-gray-700"
+    >
       <i class="fa fa-arrow-left mr-2" aria-hidden="true"></i>
       <span>Go back</span>
     </button>

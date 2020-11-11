@@ -20,7 +20,7 @@ export default {
   },
   data() {
     return {
-      component: "fbMatch", // "roomCode",
+      component: game.isInstant ? "fbMatch" : "roomCode",
       show: false
     };
   },
