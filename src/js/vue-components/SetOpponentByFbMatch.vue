@@ -6,7 +6,7 @@
         <div @click="playWithRandomOpponent()" class="flex-1">
           <p>Play with random opponent</p>
         </div>
-        <div class="flex-1">
+        <div @click="playWithFriend()" class="flex-1">
           <p>Play with a friend</p>
         </div>
         <div @click="playByRoomCode()" class="flex-1">
@@ -21,6 +21,12 @@
 <script>
 export default {
   name: "set-opponent-by-fb-match",
+
+  data() {
+    return {
+      toShow: "fbMatchHome"
+    };
+  },
   created() {
     game.bus.$on("matchToRoom", room => {
       console.log("the room is", room);
@@ -32,6 +38,9 @@ export default {
     },
     playWithRandomOpponent() {
       game.InstantGame.match();
+    },
+    playWithFriend() {
+      game.InstantGame.chooseContext();
     },
     getLoadedImageSrc(imageKey) {
       const textures = game.scene.getScene("LoadScene").textures;

@@ -83,6 +83,11 @@ __webpack_require__.r(__webpack_exports__);
 //
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "set-opponent-by-fb-match",
+  data: function data() {
+    return {
+      toShow: "fbMatchHome"
+    };
+  },
   created: function created() {
     game.bus.$on("matchToRoom", function (room) {
       console.log("the room is", room);
@@ -94,6 +99,9 @@ __webpack_require__.r(__webpack_exports__);
     },
     playWithRandomOpponent: function playWithRandomOpponent() {
       game.InstantGame.match();
+    },
+    playWithFriend: function playWithFriend() {
+      game.InstantGame.chooseContext();
     },
     getLoadedImageSrc: function getLoadedImageSrc(imageKey) {
       var textures = game.scene.getScene("LoadScene").textures;
@@ -207,6 +215,9 @@ __webpack_require__.r(__webpack_exports__);
     });
     game.bus.$on("PrintOpponentDisconnected", this.printOpponentDisonnected);
     game.bus.$on("StartRoom", function (roomToStart) {
+      // Stop plane animation 
+      game.scene.getScene('SetPlaneScene').animatedPlane.stopFollow().destroy();
+
       if (roomToStart == _this.roomCode) {
         // This is the room initiator player
         _this.printOpponentConnected();
@@ -383,7 +394,18 @@ var render = function() {
             [_c("p", [_vm._v("Play with random opponent")])]
           ),
           _vm._v(" "),
-          _vm._m(0),
+          _c(
+            "div",
+            {
+              staticClass: "flex-1",
+              on: {
+                click: function($event) {
+                  return _vm.playWithFriend()
+                }
+              }
+            },
+            [_c("p", [_vm._v("Play with a friend")])]
+          ),
           _vm._v(" "),
           _c(
             "div",
@@ -408,16 +430,7 @@ var render = function() {
     ]
   )
 }
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "flex-1" }, [
-      _c("p", [_vm._v("Play with a friend")])
-    ])
-  }
-]
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -2102,6 +2115,24 @@ __webpack_require__.r(__webpack_exports__);
     } else {
       return 1;
     }
+  },
+  convertImgToBase64URL: function convertImgToBase64URL(url, callback, outputFormat) {
+    var img = new Image();
+    img.crossOrigin = 'Anonymous';
+
+    img.onload = function () {
+      var canvas = document.createElement('CANVAS'),
+          ctx = canvas.getContext('2d'),
+          dataURL;
+      canvas.height = img.height;
+      canvas.width = img.width;
+      ctx.drawImage(img, 0, 0);
+      dataURL = canvas.toDataURL(outputFormat);
+      callback(dataURL);
+      canvas = null;
+    };
+
+    img.src = url;
   }
 });
 
@@ -2116,11 +2147,14 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _helpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../helpers */ "./src/js/helpers.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+
 
 var InstantGame = /*#__PURE__*/function () {
   function InstantGame() {
@@ -2163,8 +2197,13 @@ var InstantGame = /*#__PURE__*/function () {
   }, {
     key: "chooseContext",
     value: function chooseContext() {
-      FBInstant.context.chooseAsync().then(function () {
-        console.log(FBInstant.context.getID()); // 1234567890
+      FBInstant.context.chooseAsync({
+        //filters: ['NEW_CONTEXT_ONLY'],
+        minSize: 2,
+        maxSize: 2
+      }).then(function () {
+        var contextId = FBInstant.context.getID();
+        InstantGame.sendInvitation(contextId);
       });
     }
   }, {
@@ -2174,6 +2213,38 @@ var InstantGame = /*#__PURE__*/function () {
         return players.forEach(function (player) {
           console.log(player.getName());
         });
+      });
+    }
+  }, {
+    key: "sendInvitation",
+    value: function sendInvitation(contextId) {
+      console.log('here i am');
+      var imgFromPage = 'https://scontent-otp1-1.xx.fbcdn.net/v/t1.0-9/122407489_115339883698070_2455859213577006635_o.png?_nc_cat=109&ccb=2&_nc_sid=e3f864&_nc_ohc=Ba9lBJPNSvAAX9dUL_J&_nc_ht=scontent-otp1-1.xx&oh=7176ceb57e153dd9fcc4dab798da1247&oe=5FD1A548';
+      _helpers__WEBPACK_IMPORTED_MODULE_0__["default"].convertImgToBase64URL(imgFromPage, function (base64) {
+        InstantGame.sendMessage(base64, contextId);
+      });
+    }
+  }, {
+    key: "sendMessage",
+    value: function sendMessage(base64image, contextId) {
+      console.log('here i am');
+      var playerName = FBInstant.player.getName();
+      var payload = {
+        cta: 'Go Play!',
+        data: {
+          contextId: contextId
+        },
+        text: "".concat(playerName, " invited you to play a match now"),
+        image: base64image,
+        action: 'CUSTOM',
+        template: 'INVITE',
+        strategy: 'IMMEDIATE',
+        notification: 'NO_PUSH'
+      };
+      FBInstant.updateAsync(payload).then(function () {
+        console.log('Message was posted!');
+      })["catch"](function (error) {
+        console.log('Message was not posted: ' + error.message);
       });
     }
   }]);
@@ -2243,10 +2314,18 @@ var LoadScene = /*#__PURE__*/function (_Phaser$Scene) {
   }, {
     key: "preload",
     value: function preload() {
+      // dev
+      // this.load.plugin(
+      //     'PathBuilder.min',
+      //     'src/js/PathBuilder.min.js',
+      //     'PathBuilder'
+      // );
+      this.load.json('path', 'assets/path.json');
       /**
        * LoadScene images
        */
       // Player photo
+
       if (game.gameData.players.player.photo) {
         this.load.image('player', game.gameData.players.player.photo);
       } else {
@@ -2541,6 +2620,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_Map__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/Map */ "./src/js/components/Map.js");
 /* harmony import */ var _components_Plane__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/Plane */ "./src/js/components/Plane.js");
 /* harmony import */ var _components_Background__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/Background */ "./src/js/components/Background.js");
+/* harmony import */ var phaser3_rex_plugins_plugins_pathfollower_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! phaser3-rex-plugins/plugins/pathfollower.js */ "./node_modules/phaser3-rex-plugins/plugins/pathfollower.js");
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -2562,6 +2642,7 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
 
 
 
@@ -2625,6 +2706,8 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
       }).bringToTop('StartScene'); // ---
       // let cls = localStorage.getItem('lastPlaceCells').split(',');
       // this.drawByCells(cls);
+
+      this.playPlaneAnimation();
     }
   }, {
     key: "addStartGame",
@@ -2652,6 +2735,31 @@ var SetPlaneScene = /*#__PURE__*/function (_Phaser$Scene) {
           }
         });
       });
+    }
+  }, {
+    key: "playPlaneAnimation",
+    value: function playPlaneAnimation() {
+      var path = new Phaser.Curves.Path(this.cache.json.get('path')); // var graphics = this.add.graphics().lineStyle(1, 0x2d2d2d, 1);
+      // path.draw(graphics);
+
+      var follower = this.add.follower(path, 0, 0, 'plane-1');
+      follower.startFollow({
+        duration: 8000,
+        positionOnPath: true,
+        repeat: -1,
+        yoyo: true,
+        ease: 'Linear',
+        rotateToPath: true,
+        verticalAdjust: true,
+        rotationOffset: 90 // onUpdate: (tween) => {
+        //     console.log(tween.progress);
+        // },
+
+      });
+      this.animatedPlane = follower; // setTimeout(() => {
+      //     follower.stopFollow();
+      //     follower.destroy();
+      // }, 5000);
     } // debug
 
   }, {

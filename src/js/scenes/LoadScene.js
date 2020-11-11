@@ -14,6 +14,15 @@ class LoadScene extends Phaser.Scene {
     }
 
     preload() {
+        // dev
+        // this.load.plugin(
+        //     'PathBuilder.min',
+        //     'src/js/PathBuilder.min.js',
+        //     'PathBuilder'
+        // );
+
+        this.load.json('path', 'assets/path.json');
+
         /**
          * LoadScene images
          */

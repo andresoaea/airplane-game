@@ -2,6 +2,7 @@ import Socket from '../Socket';
 import Map from '../components/Map';
 import Plane from '../components/Plane';
 import Background from '../components/Background';
+import PathFollower from 'phaser3-rex-plugins/plugins/pathfollower.js';
 
 class SetPlaneScene extends Phaser.Scene {
     constructor() {
@@ -67,6 +68,8 @@ class SetPlaneScene extends Phaser.Scene {
 
         // let cls = localStorage.getItem('lastPlaceCells').split(',');
         // this.drawByCells(cls);
+
+        this.playPlaneAnimation();
     }
 
     addStartGame() {
@@ -92,6 +95,34 @@ class SetPlaneScene extends Phaser.Scene {
                     },
                 });
             });
+    }
+
+    playPlaneAnimation() {
+        const path = new Phaser.Curves.Path(this.cache.json.get('path'));
+        // var graphics = this.add.graphics().lineStyle(1, 0x2d2d2d, 1);
+        // path.draw(graphics);
+        const follower = this.add.follower(path, 0, 0, 'plane-1');
+        follower.startFollow({
+            duration: 8000,
+            positionOnPath: true,
+            repeat: -1,
+            yoyo: true,
+            ease: 'Linear',
+            rotateToPath: true,
+            verticalAdjust: true,
+            rotationOffset: 90,
+            // onUpdate: (tween) => {
+            //     console.log(tween.progress);
+
+            // },
+        });
+
+        this.animatedPlane = follower;
+
+        // setTimeout(() => {
+        //     follower.stopFollow();
+        //     follower.destroy();
+        // }, 5000);
     }
 
     // debug

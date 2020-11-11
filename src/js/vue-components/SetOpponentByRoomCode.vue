@@ -82,6 +82,10 @@ export default {
     game.bus.$on("PrintOpponentDisconnected", this.printOpponentDisonnected);
 
     game.bus.$on("StartRoom", roomToStart => {
+
+      // Stop plane animation 
+      game.scene.getScene('SetPlaneScene').animatedPlane.stopFollow().destroy();
+
       if (roomToStart == this.roomCode) {
         // This is the room initiator player
         this.printOpponentConnected();
